@@ -1,0 +1,17 @@
+{
+  "name": "靜月之光 庫存管理",
+  "short_name": "庫存",
+  "description": "水晶 / 天鐵 / 龍宮舍利 庫存與定價",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0e18",
+  "theme_color": "#0c0e18",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
