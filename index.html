@@ -614,13 +614,9 @@
       </div>
 
       <div class="setlabel" style="margin-top:22px">☁ 雲端同步 <span style="color:var(--muted);font-weight:400">（多裝置共用同一份資料）</span></div>
-      <div class="cloudstat" id="cloudStat">尚未啟用。啟用後可在手機、電腦間同步庫存與交易。</div>
+      <div class="cloudstat" id="cloudStat">尚未啟用。設定同步碼後，手機、電腦間就能同步庫存與交易。</div>
       <div class="field">
-        <label>Firebase 設定 <span class="hint">貼上 firebaseConfig 物件</span></label>
-        <textarea id="fbCfg" class="cfg" placeholder='{ "apiKey":"…", "authDomain":"…", "projectId":"…", "appId":"…" }'></textarea>
-      </div>
-      <div class="field">
-        <label>同步碼 <span class="hint">兩支裝置填一樣的才會同步</span></label>
+        <label>同步碼 <span class="hint">所有裝置填一樣的才會同步</span></label>
         <div class="synccode">
           <input id="fbCode" placeholder="例：jy-8f3k2p" autocomplete="off">
           <button class="btn ghost" id="codeGen" type="button" style="flex:0 0 auto;padding:11px 13px">產生</button>
@@ -630,7 +626,7 @@
         <button class="btn gold" id="cloudConnect" type="button">啟用 / 連線</button>
         <button class="btn del" id="cloudOff" type="button" style="display:none">關閉同步</button>
       </div>
-      <div class="sub" style="margin-top:6px">資料存在你自己的 Firebase 專案。同步碼請自己保管——知道你的設定和同步碼的人才能存取，所以別公開。</div>
+      <div class="sub" style="margin-top:6px">Firebase 已內建，只需設定同步碼。資料存在你自己的 Firebase 專案。同步碼請自己保管——知道同步碼的人才能存取你的資料，所以別公開。</div>
 
       <div class="btns" style="margin-top:14px"><button class="btn ghost" id="setClose" type="button">關閉</button></div>
     </div>
@@ -1208,11 +1204,21 @@ function printReport(){
 
 /* ───────── cloud sync (Firebase anonymous auth + Firestore) ───────── */
 const CLOUD_KEY='jingyue_cloud_v1', DEV_KEY='jingyue_device_v1';
-let cloud={on:false,config:null,code:null};
+// Firebase 設定已內建（前端金鑰本就公開）。同步碼不寫死，由使用者自己設定一次。
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyCy0-E33A_DtFKf63oMIQMtNNU_fEZ3pqQ",
+  authDomain:"jingyue-ledger.firebaseapp.com",
+  projectId:"jingyue-ledger",
+  storageBucket:"jingyue-ledger.firebasestorage.app",
+  messagingSenderId:"726548369789",
+  appId:"1:726548369789:web:a93eaf1639836119f87c14"
+};
+let cloud={on:false,config:FIREBASE_CONFIG,code:null};
 let fbApp=null,fbAuth=null,fbDoc=null,fbUnsub=null,lastPush=0,deviceId='',pushTimer=null;
-function loadCloudCfg(){try{const r=localStorage.getItem(CLOUD_KEY);if(r){const o=JSON.parse(r);cloud.on=!!o.on;cloud.config=o.config||null;cloud.code=o.code||null;}}catch(e){}
+function loadCloudCfg(){try{const r=localStorage.getItem(CLOUD_KEY);if(r){const o=JSON.parse(r);cloud.on=!!o.on;cloud.code=o.code||null;}}catch(e){}
+  cloud.config=FIREBASE_CONFIG;
   try{deviceId=localStorage.getItem(DEV_KEY)||'';if(!deviceId){deviceId='d'+Math.random().toString(36).slice(2,10);localStorage.setItem(DEV_KEY,deviceId);}}catch(e){deviceId='d'+Math.random().toString(36).slice(2,10);}}
-function saveCloudCfg(){try{localStorage.setItem(CLOUD_KEY,JSON.stringify(cloud));}catch(e){}}
+function saveCloudCfg(){try{localStorage.setItem(CLOUD_KEY,JSON.stringify({on:cloud.on,code:cloud.code}));}catch(e){}}
 function loadFirebaseSDK(){return new Promise((res,rej)=>{
   if(window.firebase&&firebase.firestore)return res();
   const base='https://www.gstatic.com/firebasejs/10.12.0/';
@@ -1253,12 +1259,9 @@ function parseFirebaseConfig(raw){
   return JSON.parse(j);
 }
 async function cloudConnect(){
-  const raw=$('fbCfg').value.trim(),code=$('fbCode').value.trim();
-  if(!raw){toast('請貼上 Firebase 設定');return;}
+  const code=$('fbCode').value.trim();
   if(!code){toast('請填或產生同步碼');return;}
-  let config;try{config=parseFirebaseConfig(raw);}catch(e){toast('Firebase 設定看不懂，請整段貼上');return;}
-  if(!config.apiKey||!config.projectId){toast('設定缺 apiKey 或 projectId');return;}
-  cloud.on=true;cloud.config=config;cloud.code=code;saveCloudCfg();
+  cloud.on=true;cloud.config=FIREBASE_CONFIG;cloud.code=code;saveCloudCfg();
   cloudStatus('連線中…','#e0a23f');
   try{await initCloud();toast('雲端已連線');}
   catch(e){cloud.on=false;saveCloudCfg();cloudStatus('連線失敗：'+(e.message||e),'#e0644f');updateCloudButtons();toast('連線失敗，看狀態列訊息');}
@@ -1493,7 +1496,6 @@ function openSet(){closeData();
   document.querySelectorAll('#themeRow .sw').forEach(b=>b.classList.toggle('on',(b.dataset.theme||'')===state.theme));
   document.querySelectorAll('#cardfsRow .opt').forEach(b=>b.classList.toggle('on',(b.dataset.cardfs||'')===state.cardfs));
   document.querySelectorAll('#densityRow .opt').forEach(b=>b.classList.toggle('on',(b.dataset.density||'')===state.density));
-  $('fbCfg').value=cloud.config?JSON.stringify(cloud.config,null,1):'';
   $('fbCode').value=cloud.code||'';
   updateCloudButtons();
   if(cloud.on)cloudStatus('已連線 · 同步碼 '+cloud.code,'#5fb87a');
