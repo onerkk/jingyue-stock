@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e18">
+<title>靜月之光 · 庫存</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="庫存">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --ink:#0c0e18; --ink2:#11131f; --panel:rgba(255,255,255,.045);
+    --line:rgba(201,162,39,.20); --line2:rgba(255,255,255,.08);
+    --gold:#c9a227; --gilt:#e8cf86; --goldtxt:#d9c79a;
+    --txt:#ece8df; --muted:#9a9486; --muted2:#6f6a60;
+    --ok:#5fb87a; --low:#e0a23f; --out:#e0644f;
+    --jin:#d9c27a; --mu:#5fb87a; --shui:#4a90d9; --huo:#e0644f; --tu:#c8923f; --duo:#b98ce0;
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--ink);color:var(--txt)}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Noto Sans TC","Segoe UI",sans-serif;
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(201,162,39,.10), transparent 60%),
+      radial-gradient(80% 40% at 85% 0%, rgba(74,144,217,.06), transparent 55%),
+      var(--ink);
+    min-height:100vh; padding-bottom:96px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:"Songti TC","Noto Serif TC",Georgia,"PingFang TC",serif}
+  /* ── Topbar ── */
+  .topbar{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);
+    background:linear-gradient(180deg, rgba(12,14,24,.92), rgba(12,14,24,.78));
+    border-bottom:1px solid var(--line); padding:14px 16px 10px;}
+  .brandrow{display:flex;align-items:center;gap:10px}
+  .moon{width:22px;height:22px;border-radius:50%;
+    background:radial-gradient(circle at 32% 32%, var(--gilt), var(--gold) 55%, #6b5414 100%);
+    box-shadow:0 0 14px rgba(201,162,39,.45), inset -4px -4px 6px rgba(0,0,0,.35);flex:0 0 auto}
+  .brand{font-size:19px;letter-spacing:.10em;color:var(--gilt);font-weight:600}
+  .brand small{color:var(--muted);font-size:12px;letter-spacing:.18em;margin-left:6px;font-weight:400}
+  .tbbtns{margin-left:auto;display:flex;gap:8px}
+  .gear{background:none;border:1px solid var(--line);color:var(--goldtxt);
+    width:34px;height:34px;border-radius:10px;font-size:16px;cursor:pointer}
+  .gear:active{background:var(--panel)}
+  .stats{display:flex;gap:8px;margin-top:12px}
+  .stat{flex:1;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:9px 8px;text-align:center}
+  .stat b{display:block;font-size:18px;color:var(--txt);line-height:1.15;font-variant-numeric:tabular-nums}
+  .stat span{font-size:11px;color:var(--muted);letter-spacing:.06em}
+  .stat.warn b{color:var(--out)}
+  /* ── Toolbar ── */
+  .toolbar{position:sticky;top:0;z-index:20;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;
+    background:linear-gradient(180deg, rgba(12,14,24,.85), rgba(12,14,24,0));}
+  .search{flex:1 1 100%;min-width:0;display:flex;align-items:center;gap:8px;
+    background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:0 12px}
+  .search input{flex:1;background:none;border:0;color:var(--txt);font-size:15px;padding:11px 0;outline:none}
+  .search input::placeholder{color:var(--muted2)}
+  .search .ic{color:var(--muted);font-size:14px}
+  .ctl{background:var(--panel);border:1px solid var(--line2);color:var(--goldtxt);
+    border-radius:10px;padding:9px 11px;font-size:13px;cursor:pointer;outline:none}
+  select.ctl{appearance:none;-webkit-appearance:none;padding-right:26px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23d9c79a'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center}
+  .ctl.on{border-color:var(--gold);color:var(--gilt);background:rgba(201,162,39,.10)}
+  .actions{margin-left:auto;display:flex;gap:8px}
+  /* ── List ── */
+  .wrap{padding:6px 14px 0}
+  .grouphdr{display:flex;align-items:center;gap:8px;margin:16px 2px 8px;font-size:13px;letter-spacing:.12em;color:var(--goldtxt)}
+  .grouphdr .dot{width:9px;height:9px;border-radius:50%}
+  .grouphdr .ln{flex:1;height:1px;background:var(--line2)}
+  .grouphdr .ct{color:var(--muted);font-size:12px}
+  .card{position:relative;display:flex;gap:12px;background:var(--panel);border:1px solid var(--line2);
+    border-radius:var(--r);padding:13px 14px 13px 16px;margin-bottom:9px;cursor:pointer;overflow:hidden}
+  .card:active{background:rgba(255,255,255,.07)}
+  .card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+  .card .body{flex:1;min-width:0}
+  .card .ttl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .card .nm{font-size:16px;font-weight:600;color:var(--txt)}
+  .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid;letter-spacing:.04em;white-space:nowrap}
+  .specs{margin-top:5px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+  .specs b{color:var(--goldtxt);font-weight:500}
+  .priceline{margin-top:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+  .pill{padding:3px 9px;border-radius:8px;font-variant-numeric:tabular-nums}
+  .pill.cost{background:rgba(255,255,255,.05);color:var(--muted)}
+  .pill.sale{background:rgba(201,162,39,.12);color:var(--gilt);border:1px solid var(--line)}
+  .qty{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .st{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;margin-left:auto}
+  .st.ok{background:rgba(95,184,122,.14);color:var(--ok)}
+  .st.low{background:rgba(224,162,63,.16);color:var(--low)}
+  .st.out{background:rgba(224,100,79,.16);color:var(--out)}
+  .empty{text-align:center;color:var(--muted);padding:60px 24px;line-height:1.8}
+  .empty b{color:var(--goldtxt);display:block;margin-bottom:6px;font-size:15px}
+  /* ── FAB ── */
+  .fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:25;
+    width:58px;height:58px;border-radius:50%;border:1px solid rgba(232,207,134,.5);
+    background:linear-gradient(160deg, var(--gilt), var(--gold) 60%, #8a6c15);
+    color:#241c07;font-size:30px;font-weight:300;cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.2);
+    display:flex;align-items:center;justify-content:center;line-height:1}
+  .fab:active{transform:scale(.94)}
+  /* ── Sheet / Modal ── */
+  .backdrop{position:fixed;inset:0;z-index:40;background:rgba(4,5,10,.6);backdrop-filter:blur(3px);
+    display:none;align-items:flex-end;justify-content:center}
+  .backdrop.show{display:flex}
+  .sheet{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;
+    background:linear-gradient(180deg,#14172300,#141723 18px), #14182a;
+    border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;
+    padding:8px 18px calc(28px + env(safe-area-inset-bottom));
+    animation:rise .26s cubic-bezier(.2,.8,.2,1)}
+  @keyframes rise{from{transform:translateY(28px);opacity:.4}to{transform:none;opacity:1}}
+  .grab{width:38px;height:4px;border-radius:4px;background:var(--line2);margin:6px auto 12px}
+  .sheet h2{margin:2px 0 4px;font-size:18px;color:var(--gilt);letter-spacing:.06em;font-weight:600}
+  .sheet .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+  .field{margin-bottom:13px}
+  .field.dim-hidden{display:none}
+  label{display:block;font-size:12.5px;color:var(--goldtxt);margin-bottom:6px;letter-spacing:.04em}
+  label .hint{color:var(--muted2);font-weight:400;letter-spacing:0}
+  input,select,textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line2);
+    border-radius:11px;color:var(--txt);font-size:15.5px;padding:12px 13px;outline:none;
+    font-family:inherit;transition:border-color .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);background:rgba(201,162,39,.06)}
+  input::placeholder{color:var(--muted2)}
+  select{appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M0 0l5.5 7L11 0z' fill='%23d9c79a'/></svg>");
+    background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+  textarea{resize:vertical;min-height:46px}
+  .row2{display:flex;gap:10px}.row2>.field{flex:1}
+  .chip-info{display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 12px}
+  .chip{font-size:11.5px;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.05);
+    color:var(--muted);border:1px solid var(--line2)}
+  .chip.match{background:rgba(95,184,122,.12);color:var(--ok);border-color:rgba(95,184,122,.3)}
+  .chip.new{background:rgba(224,162,63,.12);color:var(--low);border-color:rgba(224,162,63,.3)}
+  .moretog{background:none;border:1px dashed var(--line2);color:var(--goldtxt);width:100%;
+    border-radius:10px;padding:9px;font-size:13px;cursor:pointer;margin-bottom:13px}
+  .preview{background:rgba(201,162,39,.06);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin:4px 0 16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .preview .pv{flex:1;min-width:90px}
+  .preview .pv span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .preview .pv b{font-size:17px;color:var(--gilt);font-variant-numeric:tabular-nums}
+  .preview .pvst{font-size:12px;padding:4px 10px;border-radius:999px;font-weight:600}
+  .remember{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);
+    margin:2px 0 16px;cursor:pointer;user-select:none}
+  .remember input{width:18px;height:18px;flex:0 0 auto;accent-color:var(--gold)}
+  .btns{display:flex;gap:10px;margin-top:6px}
+  .btn{flex:1;border-radius:12px;padding:14px;font-size:15.5px;font-weight:600;cursor:pointer;border:1px solid;letter-spacing:.04em}
+  .btn.ghost{background:none;border-color:var(--line2);color:var(--muted)}
+  .btn.ghost:active{background:var(--panel)}
+  .btn.gold{background:linear-gradient(160deg,var(--gilt),var(--gold) 65%,#8a6c15);border-color:rgba(232,207,134,.5);color:#241c07}
+  .btn.gold:active{filter:brightness(.94)}
+  .btn.del{background:none;border-color:rgba(224,100,79,.4);color:var(--out);flex:0 0 auto;padding:14px 16px}
+  /* ── Toast ── */
+  .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+    background:#1c2030;border:1px solid var(--line);color:var(--txt);padding:11px 18px;border-radius:12px;
+    font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:.25s;max-width:88%;text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .memnote{font-size:11.5px;color:var(--low);text-align:center;padding:6px 14px 0}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media (min-width:600px){ .backdrop{align-items:center} .sheet{border-radius:20px;border-bottom:1px solid var(--line)} }
+  /* ── stats detail ── */
+  .statstoggle{margin:8px auto 0;display:block;background:none;border:0;color:var(--muted);font-size:11.5px;letter-spacing:.1em;cursor:pointer;padding:4px 10px}
+  .statstoggle:active{color:var(--goldtxt)}
+  .statsdetail{margin-top:10px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:12px 13px}
+  .sd-vals{display:flex;gap:12px;margin-bottom:10px}
+  .sd-vals>div{flex:1;text-align:center}
+  .sd-vals span{display:block;font-size:11px;color:var(--muted)}
+  .sd-vals b{font-size:16px;color:var(--gilt);font-variant-numeric:tabular-nums}
+  .bar-row{display:flex;align-items:center;gap:9px;margin:5px 0;font-size:12px}
+  .bar-row .bl{width:26px;font-weight:600;flex:0 0 auto}
+  .bar-row .bt{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden}
+  .bar-row .bf{display:block;height:100%;border-radius:6px}
+  .bar-row .bn{width:30px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .stat.tap{cursor:pointer}.stat.tap:active{background:rgba(201,162,39,.10)}
+  .stat.active{border-color:var(--out);background:rgba(224,100,79,.10)}
+  /* ── element filter chips ── */
+  .chips{display:flex;flex-wrap:wrap;gap:7px;padding:2px 14px 8px}
+  .chip-f{background:var(--panel);border:1px solid var(--line2);color:var(--muted);border-radius:999px;
+    padding:6px 12px;font-size:13px;cursor:pointer;font-variant-numeric:tabular-nums;outline:none}
+  .chip-f.on{font-weight:600}
+  .chip-f.clear{border-style:dashed;color:var(--goldtxt)}
+  /* ── expanded card ── */
+  .card.open{background:rgba(255,255,255,.07);border-color:var(--line)}
+  .cardexp{margin-top:11px;padding-top:11px;border-top:1px solid var(--line2)}
+  .exp-specs{font-size:12.5px;color:var(--muted);margin-bottom:7px;line-height:1.6}
+  .exp-price{font-size:13px;color:var(--muted);margin-bottom:11px}
+  .exp-price b{color:var(--gilt);font-variant-numeric:tabular-nums}
+  .exp-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .xb{border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--txt);border-radius:9px;
+    padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;font-weight:500}
+  .xb:active{background:rgba(255,255,255,.09)}
+  .xb.minus,.xb.plus{width:38px;justify-content:center;font-size:17px;padding:7px 0;color:var(--gilt)}
+  .xqty{font-size:13px;color:var(--goldtxt);font-variant-numeric:tabular-nums;min-width:58px;text-align:center}
+  .xb.link{color:var(--gilt);border-color:var(--line);background:rgba(201,162,39,.10)}
+  .xb.edit{margin-left:auto}
+  .xb.del{color:var(--out);border-color:rgba(224,100,79,.35)}
+  /* ── lookup manager ── */
+  .lklist{max-height:54vh;overflow-y:auto;margin:0 -2px}
+  .lkrow{display:flex;gap:11px;background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;margin-bottom:7px;cursor:pointer;overflow:hidden;position:relative}
+  .lkrow:active{background:rgba(255,255,255,.07)}
+  .lkbar{position:absolute;left:0;top:0;bottom:0;width:3px}
+  .lkbody{flex:1;min-width:0;padding-left:4px}
+  .lknm{font-size:14.5px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .lksub{font-size:12px;color:var(--muted);margin-top:3px}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brandrow">
+      <div class="moon"></div>
+      <div class="brand serif">靜月之光<small>庫存管理</small></div>
+      <div class="tbbtns">
+        <button class="gear" id="dataBtn" aria-label="備份與還原">⤓</button>
+        <button class="gear" id="gearBtn" aria-label="定價參數">⚙</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat tap" id="stItemsBox"><b id="stItems">0</b><span>品項 · 點清篩選</span></div>
+      <div class="stat warn tap" id="stNeedBox"><b id="stNeed">0</b><span>需補貨 · 點篩選</span></div>
+      <div class="stat"><b id="stCost">$0</b><span>庫存成本</span></div>
+    </div>
+    <button class="statstoggle" id="statsToggle">庫存明細 ▾</button>
+    <div class="statsdetail" id="statsDetail" style="display:none"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <span class="ic">⌕</span>
+      <input id="q" type="search" placeholder="搜尋品項、五行、功效…" autocomplete="off">
+    </div>
+    <select class="ctl" id="sort" aria-label="排序">
+      <option value="def">預設順序</option>
+      <option value="elem">依五行</option>
+      <option value="name">品項名稱</option>
+      <option value="stock">補貨優先</option>
+      <option value="qty">數量少→多</option>
+      <option value="cost">進價高→低</option>
+      <option value="date">進貨新→舊</option>
+    </select>
+    <button class="ctl" id="groupBtn">五行分組</button>
+    <select class="ctl" id="lifeFilter" aria-label="依命格篩選">
+      <option value="all">命格 · 全部</option>
+      <option value="火">喜火</option>
+      <option value="土">喜土</option>
+      <option value="金">喜金</option>
+      <option value="水">喜水</option>
+      <option value="木">喜木</option>
+      <option value="any">各命格皆宜</option>
+    </select>
+    <div class="actions">
+      <button class="ctl" id="impBtn">匯入</button>
+      <button class="ctl" id="xlsxBtn">匯出xlsx</button>
+      <button class="ctl" id="csvBtn">CSV</button>
+    </div>
+    <input type="file" id="fileIn" accept=".xlsx,.xls" style="display:none">
+  </div>
+
+  <div class="chips" id="elemChips"></div>
+  <div class="memnote" id="memNote" style="display:none">⚠ 預覽模式無法存檔，部署到網站或手機後資料會自動保存</div>
+  <div class="wrap"><div id="list"></div></div>
+
+  <button class="fab" id="addBtn" aria-label="新增品項">＋</button>
+
+  <!-- Item sheet -->
+  <div class="backdrop" id="backdrop">
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2 id="sheetTitle">新增品項</h2>
+      <div class="sub">打品項名稱，五行與功效會自動帶入；關鍵尺寸依型態自動跳出</div>
+
+      <div class="field">
+        <label>品項名稱</label>
+        <input id="f_name" list="crystalList" placeholder="例：俄羅斯草莓晶" autocomplete="off">
+        <datalist id="crystalList"></datalist>
+      </div>
+      <div class="chip-info" id="matchChips"></div>
+
+      <div class="row2">
+        <div class="field">
+          <label>五行</label>
+          <select id="f_elem"></select>
+        </div>
+        <div class="field">
+          <label>進價 <span class="hint">元</span></label>
+          <input id="f_cost" type="number" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+
+      <div id="dimGroup">
+        <div class="field dim-field" data-field="bead"><label>珠徑 <span class="hint">mm</span></label><input id="f_bead" type="number" inputmode="decimal" placeholder="—"></div>
+        <div class="field dim-field" data-field="wrist"><label>手圍 <span class="hint">cm</span></label><input id="f_wrist" type="number" inputmode="decimal" placeholder="—"></div>
+        <div class="field dim-field" data-field="ring"><label>戒圍 <span class="hint">號</span></label><input id="f_ring" type="number" inputmode="decimal" placeholder="—"></div>
+        <div class="field dim-field" data-field="chain"><label>鍊長 <span class="hint">cm</span></label><input id="f_chain" type="number" inputmode="decimal" placeholder="—"></div>
+      </div>
+      <button class="moretog" id="moreDims" type="button">＋ 顯示全部尺寸欄位</button>
+
+      <div class="row2">
+        <div class="field">
+          <label>數量 <span class="hint">件</span></label>
+          <input id="f_qty" type="number" inputmode="numeric" placeholder="0">
+        </div>
+        <div class="field">
+          <label>安全庫存 <span class="hint">低於→補貨</span></label>
+          <input id="f_safe" type="number" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>進貨日期</label>
+        <input id="f_date" type="date">
+      </div>
+      <div class="field">
+        <label>功效 <span class="hint">逗號分隔</span></label>
+        <textarea id="f_eff" placeholder="例：桃花,人緣"></textarea>
+      </div>
+      <div class="field">
+        <label>蝦皮連結 <span class="hint">選填</span></label>
+        <input id="f_link" type="url" placeholder="https://shopee.tw/…">
+      </div>
+
+      <div class="preview">
+        <div class="pv"><span>蝦皮定價</span><b id="pvShopee">—</b></div>
+        <div class="pv"><span>建議售價</span><b id="pvSug">—</b></div>
+        <div class="pvst" id="pvStock" style="background:rgba(255,255,255,.05);color:var(--muted)">補貨狀態</div>
+      </div>
+
+      <label class="remember" id="rememberWrap" style="display:none">
+        <input type="checkbox" id="f_remember" checked>
+        <span>加入五行對照表，下次自動帶入</span>
+      </label>
+
+      <div class="btns">
+        <button class="btn ghost" id="cancelBtn" type="button">取消</button>
+        <button class="btn del" id="delBtn" type="button" style="display:none">刪除</button>
+        <button class="btn gold" id="saveBtn" type="button">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Params sheet -->
+  <div class="backdrop" id="pBackdrop">
+    <div class="sheet" id="pSheet" role="dialog" aria-modal="true" style="max-width:440px">
+      <div class="grab"></div>
+      <h2>定價參數</h2>
+      <div class="sub">改這裡，全部品項的蝦皮定價與建議售價會即時重算</div>
+      <div class="row2">
+        <div class="field"><label>加價倍率</label><input id="p_markup" type="number" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label>蝦皮抽成</label><input id="p_comm" type="number" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>運費 <span class="hint">元</span></label><input id="p_ship" type="number" inputmode="numeric"></div>
+        <div class="field"><label>固定成本 <span class="hint">元</span></label><input id="p_fix" type="number" inputmode="numeric"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>利潤封頂 <span class="hint">元</span></label><input id="p_cap" type="number" inputmode="numeric"></div>
+        <div class="field"><label>預設安全庫存 <span class="hint">件</span></label><input id="p_safe" type="number" inputmode="numeric"></div>
+      </div>
+      <div class="btns">
+        <button class="btn ghost" id="pCancel" type="button">取消</button>
+        <button class="btn gold" id="pSave" type="button">套用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup / Restore sheet -->
+  <div class="backdrop" id="dataBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true" style="max-width:440px">
+      <div class="grab"></div>
+      <h2>備份 / 還原</h2>
+      <div class="sub">完整快照：品項＋五行對照表＋定價參數。換手機、清瀏覽器快取、或大改動前，先存一份。</div>
+      <div class="btns" style="flex-direction:column;gap:11px">
+        <button class="btn gold" id="bkBtn" type="button">⤓ 備份到檔案</button>
+        <button class="btn ghost" id="rsBtn" type="button">⤒ 從備份檔還原</button>
+        <button class="btn ghost" id="lkOpenBtn" type="button">📖 編輯五行對照表</button>
+        <button class="btn ghost" id="dataClose" type="button">關閉</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="jsonIn" accept=".json,application/json" style="display:none">
+
+  <!-- Lookup manager sheet -->
+  <div class="backdrop" id="lkBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2>五行對照表</h2>
+      <div class="sub">自動帶入的資料庫。新增水晶後，下次打名稱就會自動補上五行與功效。</div>
+      <div class="search" style="margin-bottom:11px"><span class="ic">⌕</span><input id="lkQ" type="search" placeholder="搜尋對照表…" autocomplete="off"></div>
+      <button class="btn gold" id="lkAdd" type="button" style="margin-bottom:12px">＋ 新增一筆對照</button>
+      <div id="lkList" class="lklist"></div>
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" id="lkClose" type="button">關閉</button></div>
+    </div>
+  </div>
+
+  <!-- Lookup edit sheet -->
+  <div class="backdrop" id="lkeBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true" style="max-width:460px">
+      <div class="grab"></div>
+      <h2 id="lkeTitle">新增對照</h2>
+      <div class="field"><label>水晶名稱</label><input id="lke_name" placeholder="例：俄羅斯草莓晶"></div>
+      <div class="row2">
+        <div class="field"><label>五行</label><input id="lke_elem" placeholder="火 或 金/火"></div>
+        <div class="field"><label>型態</label><input id="lke_form" placeholder="圓珠 / 手排 / 貔貅…"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>分類</label><input id="lke_cat" placeholder="天然水晶 / 隕石…"></div>
+        <div class="field"><label>適合命格</label><input id="lke_fit" placeholder="用神喜火…"></div>
+      </div>
+      <div class="field"><label>功效 <span class="hint">逗號分隔</span></label><input id="lke_eff" placeholder="桃花,人緣"></div>
+      <div class="field"><label>備註 <span class="hint">選填</span></label><input id="lke_note"></div>
+      <div class="btns">
+        <button class="btn ghost" id="lkeCancel" type="button">取消</button>
+        <button class="btn del" id="lkeDel" type="button" style="display:none">刪除</button>
+        <button class="btn gold" id="lkeSave" type="button">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"items":[{"name":"白水晶","element":"金","bead":9,"wrist":16,"ring":null,"chain":null,"cost":120,"qty":9,"date":"2025-07-02","efficacy":"淨化,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/26691327991/"},{"name":"鈦晶手排","element":"金","bead":13,"wrist":16,"ring":null,"chain":null,"cost":2500,"qty":1,"date":"2025-07-02","efficacy":"招財,事業,權威","safe":0,"link":"https://shopee.tw/product/1505773854/42913737164/"},{"name":"藍彼得算盤珠","element":"水","bead":8,"wrist":17,"ring":null,"chain":null,"cost":1300,"qty":1,"date":"2025-07-02","efficacy":"洞察力,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/27688140868/"},{"name":"阿拉善","element":"土","bead":11,"wrist":16,"ring":null,"chain":null,"cost":180,"qty":1,"date":"2025-07-02","efficacy":"穩定,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43657464285/"},{"name":"透石膏","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":130,"qty":0,"date":"2025-07-02","efficacy":"淨化,靈性提升","safe":0,"link":"https://shopee.tw/product/1505773854/42655485905/"},{"name":"紫水晶三圈","element":"火","bead":6,"wrist":14,"ring":null,"chain":null,"cost":250,"qty":1,"date":"2025-07-02","efficacy":"靈性,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/41254687909/"},{"name":"藍玉髓","element":"水","bead":8,"wrist":15,"ring":null,"chain":null,"cost":250,"qty":0,"date":"2025-07-02","efficacy":"溝通,靜心","safe":0,"link":"https://shopee.tw/product/1505773854/41754669821/"},{"name":"粉晶","element":"火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":50,"qty":1,"date":"2025-07-02","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/27534154922/"},{"name":"星光草苺晶","element":"火","bead":9,"wrist":15,"ring":null,"chain":null,"cost":100,"qty":2,"date":"2025-07-02","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/55406695947/"},{"name":"薔薇石","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":880,"qty":1,"date":"2025-07-02","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/43421584330/"},{"name":"西北非隕石","element":"金","bead":14,"wrist":15,"ring":null,"chain":null,"cost":560,"qty":0,"date":"2025-07-02","efficacy":"天地能量,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43304657218/"},{"name":"黑曜磨砂心經","element":"水","bead":16,"wrist":16,"ring":null,"chain":null,"cost":140,"qty":1,"date":"2025-07-02","efficacy":"擋煞,靜心,護身","safe":0,"link":"https://shopee.tw/product/1505773854/47851655181/"},{"name":"星光草苺晶","element":"火","bead":10,"wrist":15,"ring":null,"chain":null,"cost":180,"qty":3,"date":"2025-07-05","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/55406695947/"},{"name":"鑽切白水晶","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":110,"qty":0,"date":"2025-07-05","efficacy":"淨化,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/41107458883/"},{"name":"阿拉善","element":"土","bead":7,"wrist":16,"ring":null,"chain":null,"cost":90,"qty":2,"date":"2025-07-05","efficacy":"穩定,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43657464285/"},{"name":"阿拉善","element":"土","bead":10,"wrist":16,"ring":null,"chain":null,"cost":140,"qty":2,"date":"2025-07-05","efficacy":"穩定,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43657464285/"},{"name":"鐵膽石手排","element":"金","bead":10,"wrist":17,"ring":null,"chain":null,"cost":40,"qty":1,"date":"2025-07-05","efficacy":"擋煞,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/42364340709/"},{"name":"白水晶貔貅","element":"金","bead":7,"wrist":null,"ring":null,"chain":null,"cost":50,"qty":4,"date":"2025-07-05","efficacy":"招財,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/41007801760/"},{"name":"月光石貔貅","element":"金","bead":11,"wrist":null,"ring":null,"chain":null,"cost":120,"qty":3,"date":"2025-07-05","efficacy":"桃花,招財","safe":0,"link":"https://shopee.tw/product/1505773854/24945881624/"},{"name":"天河石貔貅","element":"水/木","bead":7,"wrist":null,"ring":null,"chain":null,"cost":40,"qty":4,"date":"2025-07-05","efficacy":"溝通,招財","safe":0,"link":"https://shopee.tw/product/1505773854/43157802423/"},{"name":"舒俱徠石貔貅","element":"火","bead":7,"wrist":null,"ring":null,"chain":null,"cost":400,"qty":4,"date":"2025-07-05","efficacy":"靈性,招財","safe":0,"link":"https://shopee.tw/product/1505773854/42657798524/"},{"name":"天鐵貔貅（金）","element":"金","bead":14,"wrist":null,"ring":null,"chain":null,"cost":650,"qty":1,"date":"2025-07-05","efficacy":"招財,擋煞,天地能量","safe":0,"link":"https://shopee.tw/product/1505773854/41207802665/"},{"name":"天鐵貔貅（銀）","element":"金","bead":14,"wrist":null,"ring":null,"chain":null,"cost":650,"qty":2,"date":"2025-07-05","efficacy":"招財,擋煞,天地能量","safe":0,"link":"https://shopee.tw/product/1505773854/41207802665/"},{"name":"彼得石貔貅","element":"多元","bead":7,"wrist":null,"ring":null,"chain":null,"cost":600,"qty":2,"date":"2025-07-05","efficacy":"洞察力,招財","safe":0,"link":"https://shopee.tw/product/1505773854/43107806477/"},{"name":"藍方解石","element":"水","bead":7,"wrist":16,"ring":null,"chain":null,"cost":100,"qty":1,"date":"2025-07-17","efficacy":"溝通,放鬆","safe":0,"link":"https://shopee.tw/product/1505773854/42608880145/"},{"name":"糖果碧璽","element":"火","bead":10,"wrist":17,"ring":null,"chain":null,"cost":10000,"qty":1,"date":"2025-07-25","efficacy":"桃花,活力","safe":0,"link":"https://shopee.tw/product/1505773854/29789129690/"},{"name":"海藍寶","element":"水","bead":11,"wrist":16,"ring":null,"chain":null,"cost":14000,"qty":1,"date":"2025-07-25","efficacy":"溝通,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/56150885866/"},{"name":"太陽花手排","element":"土","bead":15,"wrist":18,"ring":null,"chain":null,"cost":666,"qty":0,"date":"2025-07-25","efficacy":"活力,樂觀","safe":0,"link":"https://shopee.tw/product/1505773854/40215121757/"},{"name":"茶晶","element":"水","bead":14,"wrist":17,"ring":null,"chain":null,"cost":330,"qty":1,"date":"2025-08-03","efficacy":"穩定,擋煞,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/40813616458/"},{"name":"鈦晶手排","element":"金","bead":17,"wrist":19,"ring":null,"chain":null,"cost":12500,"qty":1,"date":"2025-07-25","efficacy":"招財,事業,權威","safe":0,"link":"https://shopee.tw/product/1505773854/42913737164/"},{"name":"紅虎眼","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":170,"qty":1,"date":"2025-08-03","efficacy":"活力,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/29939863247/"},{"name":"紫牙烏","element":"火","bead":12,"wrist":18,"ring":null,"chain":null,"cost":960,"qty":1,"date":"2025-08-03","efficacy":"活力,健康","safe":0,"link":"https://shopee.tw/product/1505773854/42963172328/"},{"name":"太陽花手排","element":"土","bead":22,"wrist":19,"ring":null,"chain":null,"cost":1000,"qty":0,"date":"2025-08-04","efficacy":"活力,樂觀","safe":0,"link":"https://shopee.tw/product/1505773854/40215121757/"},{"name":"綠龍晶","element":"木","bead":10.5,"wrist":16,"ring":null,"chain":null,"cost":500,"qty":1,"date":"2025-08-04","efficacy":"療癒,事業","safe":0,"link":"https://shopee.tw/product/1505773854/40363593528/"},{"name":"鈦晶手排","element":"金","bead":17,"wrist":18,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-08-04","efficacy":"招財,事業,權威","safe":0,"link":"https://shopee.tw/product/1505773854/42913737164/"},{"name":"青晶石","element":"水","bead":12,"wrist":17,"ring":null,"chain":null,"cost":1300,"qty":1,"date":"2025-08-04","efficacy":"溝通,表達","safe":0,"link":"https://shopee.tw/product/1505773854/40863214096/"},{"name":"骨幹太陽石","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":1390,"qty":0,"date":"2025-08-12","efficacy":"自信,活力,領導力","safe":0,"link":"https://shopee.tw/product/1505773854/42113544736/"},{"name":"綠髮晶手排","element":"木","bead":24,"wrist":17,"ring":null,"chain":null,"cost":2200,"qty":0,"date":"2025-08-04","efficacy":"招財,事業,健康","safe":0,"link":"https://shopee.tw/product/1505773854/40413611849/"},{"name":"月光石","element":"金","bead":9,"wrist":17,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-08-04","efficacy":"桃花,直覺,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/48002994349/"},{"name":"綠龍晶","element":"木","bead":11,"wrist":17,"ring":null,"chain":null,"cost":1000,"qty":1,"date":"2025-08-04","efficacy":"療癒,事業","safe":0,"link":"https://shopee.tw/product/1505773854/40363593528/"},{"name":"黑閃靈","element":"水","bead":10,"wrist":16,"ring":null,"chain":null,"cost":880,"qty":1,"date":"2025-08-04","efficacy":"擋煞,能量","safe":0,"link":"https://shopee.tw/product/1505773854/44413603018/"},{"name":"彩閃靈","element":"多元","bead":13,"wrist":17,"ring":null,"chain":null,"cost":2500,"qty":1,"date":"2025-08-04","efficacy":"多元能量,淨化","safe":0,"link":"https://shopee.tw/product/1505773854/41112725061/"},{"name":"鈦晶手排","element":"金","bead":17,"wrist":18,"ring":null,"chain":null,"cost":1680,"qty":1,"date":"2025-08-04","efficacy":"招財,事業,權威","safe":0,"link":"https://shopee.tw/product/1505773854/42913737164/"},{"name":"金太陽","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":12000,"qty":1,"date":"2025-08-04","efficacy":"招財,自信","safe":0,"link":"https://shopee.tw/product/1505773854/55655755172/"},{"name":"彩超七","element":"多元","bead":9,"wrist":16,"ring":null,"chain":null,"cost":28000,"qty":1,"date":"2025-08-04","efficacy":"多元能量,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/42213545516/"},{"name":"黑髮手排","element":"水","bead":17,"wrist":18,"ring":null,"chain":null,"cost":8600,"qty":1,"date":"2025-08-09","efficacy":"擋煞,防小人","safe":0,"link":"https://shopee.tw/product/1505773854/43468800264/"},{"name":"綠幽靈","element":"木","bead":13,"wrist":17,"ring":null,"chain":null,"cost":2400,"qty":1,"date":"2025-08-09","efficacy":"招財,事業","safe":0,"link":"https://shopee.tw/product/1505773854/48002994349/"},{"name":"糖果碧璽","element":"火","bead":8,"wrist":16,"ring":null,"chain":null,"cost":1800,"qty":1,"date":"2025-08-12","efficacy":"桃花,活力","safe":0,"link":"https://shopee.tw/product/1505773854/40613612174/"},{"name":"海藍寶","element":"水","bead":9,"wrist":16,"ring":null,"chain":null,"cost":1000,"qty":1,"date":"2025-08-12","efficacy":"溝通,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/56150885866/"},{"name":"彩髮圓珠","element":"多元","bead":15,"wrist":17,"ring":null,"chain":null,"cost":3000,"qty":1,"date":"2025-08-12","efficacy":"多元能量,招財","safe":0,"link":"https://shopee.tw/product/1505773854/41212720067/"},{"name":"鈦晶手排","element":"金","bead":14,"wrist":17,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-08-12","efficacy":"招財,事業,權威","safe":0,"link":"https://shopee.tw/product/1505773854/42913737164/"},{"name":"茶晶","element":"水","bead":13,"wrist":17,"ring":null,"chain":null,"cost":300,"qty":4,"date":"2025-08-12","efficacy":"穩定,擋煞,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/40813616458/"},{"name":"海藍寶","element":"水","bead":12,"wrist":16,"ring":null,"chain":null,"cost":1000,"qty":1,"date":"2025-08-17","efficacy":"溝通,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/56150885866/"},{"name":"粉晶","element":"火","bead":8,"wrist":15,"ring":null,"chain":null,"cost":50,"qty":1,"date":"2025-08-20","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/27534154922/"},{"name":"利比亞黃金隕石","element":"金/火","bead":9,"wrist":17,"ring":null,"chain":null,"cost":800,"qty":1,"date":"2025-08-20","efficacy":"招財,靈性,意志力","safe":0,"link":"https://shopee.tw/product/1505773854/47750296245/"},{"name":"綠幽靈","element":"木","bead":10,"wrist":16,"ring":null,"chain":null,"cost":300,"qty":1,"date":"2025-08-20","efficacy":"招財,事業","safe":0,"link":"https://shopee.tw/product/1505773854/48002994349/"},{"name":"金曜石","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":160,"qty":2,"date":"2025-08-20","efficacy":"擋煞,招財","safe":0,"link":"https://shopee.tw/product/1505773854/40454679022/"},{"name":"黃水晶","element":"土","bead":10,"wrist":15,"ring":null,"chain":null,"cost":80,"qty":0,"date":"2025-08-20","efficacy":"招財,自信","safe":0,"link":"https://shopee.tw/product/1505773854/41508419999/"},{"name":"黑曜磨砂心經","element":"水","bead":10,"wrist":15,"ring":null,"chain":null,"cost":50,"qty":1,"date":"2025-08-20","efficacy":"擋煞,靜心,護身","safe":0,"link":"https://shopee.tw/product/1505773854/47851655181/"},{"name":"超八","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":180,"qty":1,"date":"2025-08-20","efficacy":"多元能量,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/41704663179/"},{"name":"黃水晶","element":"土","bead":8,"wrist":15,"ring":null,"chain":null,"cost":65,"qty":1,"date":"2025-08-20","efficacy":"招財,自信","safe":0,"link":"https://shopee.tw/product/1505773854/41508419999/"},{"name":"彩色草莓晶","element":"火","bead":7,"wrist":15,"ring":null,"chain":null,"cost":260,"qty":2,"date":"2025-08-20","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/55406695947/"},{"name":"藍磷灰","element":"水","bead":12,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2025-08-20","efficacy":"溝通,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/29987636088/"},{"name":"黑曜磨砂心經（桶珠）","element":"水","bead":10.2,"wrist":15,"ring":null,"chain":null,"cost":100,"qty":1,"date":"2025-08-20","efficacy":"擋煞,靜心,護身","safe":0,"link":"https://shopee.tw/product/1505773854/47851655181/"},{"name":"紫金砂","element":"火","bead":9,"wrist":14,"ring":null,"chain":null,"cost":120,"qty":1,"date":"2025-08-20","efficacy":"靈性,能量","safe":0,"link":"https://shopee.tw/product/1505773854/40554678107/"},{"name":"紫龍晶","element":"火","bead":8,"wrist":15,"ring":null,"chain":null,"cost":280,"qty":1,"date":"2025-08-20","efficacy":"靈性,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/43654687058/"},{"name":"白幽靈","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2025-08-20","efficacy":"淨化,事業","safe":0,"link":"https://shopee.tw/product/1505773854/40754664563/"},{"name":"大地瑪腦手排","element":"土","bead":22,"wrist":20,"ring":null,"chain":null,"cost":100,"qty":1,"date":"2025-08-20","efficacy":"穩定,安全感","safe":0,"link":"https://shopee.tw/product/1505773854/41514299870/"},{"name":"彩銅超七","element":"多元","bead":10,"wrist":16,"ring":null,"chain":null,"cost":450,"qty":1,"date":"2025-08-21","efficacy":"多元能量,招財","safe":0,"link":"https://shopee.tw/product/1505773854/43166955617/"},{"name":"東陵玉","element":"木","bead":8,"wrist":16,"ring":null,"chain":null,"cost":35,"qty":1,"date":"2025-08-21","efficacy":"招財,健康","safe":0,"link":"https://shopee.tw/product/1505773854/25295856030/"},{"name":"紅瑪腦","element":"火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":180,"qty":0,"date":"2025-08-21","efficacy":"活力,健康","safe":0,"link":"https://shopee.tw/product/1505773854/40454675996/"},{"name":"粉晶手排","element":"火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":85,"qty":1,"date":"2025-08-21","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/40354689039/"},{"name":"金髮晶","element":"金","bead":9,"wrist":14,"ring":null,"chain":null,"cost":340,"qty":1,"date":"2025-08-21","efficacy":"招財,事業,貴人","safe":0,"link":"https://shopee.tw/product/1505773854/41110230894/"},{"name":"鐵膽石圓珠","element":"金","bead":10,"wrist":16,"ring":null,"chain":null,"cost":40,"qty":1,"date":"2025-08-21","efficacy":"擋煞,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/42364340709/"},{"name":"黃水晶鑽切面","element":"土","bead":10,"wrist":17,"ring":null,"chain":null,"cost":200,"qty":0,"date":"2025-08-21","efficacy":"招財,自信","safe":0,"link":null},{"name":"咖啡鈦太陽花手排","element":"金","bead":14,"wrist":19,"ring":null,"chain":null,"cost":1500,"qty":0,"date":"2025-08-26","efficacy":"招財,穩定","safe":0,"link":null},{"name":"咖啡鈦晶手排","element":"金","bead":16,"wrist":17,"ring":null,"chain":null,"cost":6000,"qty":0,"date":"2025-08-26","efficacy":"招財,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/43267069459/"},{"name":"西北非隕石","element":"金","bead":16,"wrist":17,"ring":null,"chain":null,"cost":500,"qty":0,"date":"2025-08-27","efficacy":"天地能量,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43304657218/"},{"name":"彩色天鐵手排","element":"金","bead":8,"wrist":17,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-08-27","efficacy":"擋煞,天地能量","safe":0,"link":"https://shopee.tw/product/1505773854/43715360120/"},{"name":"彩色天鐵手鍊","element":"金","bead":6,"wrist":14,"ring":null,"chain":null,"cost":2000,"qty":2,"date":"2025-08-27","efficacy":"擋煞,天地能量","safe":0,"link":"https://shopee.tw/product/1505773854/40015386921/"},{"name":"粉紅碧璽圓珠","element":"火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":7000,"qty":1,"date":"2025-08-29","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/28790930523/"},{"name":"綠幽靈","element":"木","bead":10,"wrist":16,"ring":null,"chain":null,"cost":5500,"qty":1,"date":"2025-08-29","efficacy":"招財,事業","safe":0,"link":"https://shopee.tw/product/1505773854/48002994349/"},{"name":"藍彼得圓珠","element":"水","bead":11,"wrist":17,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-09-02","efficacy":"洞察力,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/27691012095/"},{"name":"咖啡鈦晶手排","element":"金","bead":13,"wrist":17,"ring":null,"chain":null,"cost":1400,"qty":1,"date":"2025-09-02","efficacy":"招財,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/43267069459/"},{"name":"黑碧璽三圈","element":"水","bead":6,"wrist":14,"ring":null,"chain":null,"cost":250,"qty":1,"date":"2025-09-07","efficacy":"擋煞,淨化","safe":0,"link":"https://shopee.tw/product/1505773854/40617881149/"},{"name":"紫水晶","element":"火","bead":8,"wrist":17,"ring":null,"chain":null,"cost":780,"qty":1,"date":"2025-09-07","efficacy":"靈性,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/27937625877/"},{"name":"白水晶鳳凰項鍊","element":"金","bead":38,"wrist":50,"ring":null,"chain":null,"cost":1700,"qty":1,"date":"2025-09-10","efficacy":"淨化,重生","safe":0,"link":"https://shopee.tw/product/1505773854/26691327991/"},{"name":"黑髮手排","element":"水","bead":19,"wrist":19,"ring":null,"chain":null,"cost":5000,"qty":1,"date":"2025-09-13","efficacy":"擋煞,防小人","safe":0,"link":"https://shopee.tw/product/1505773854/43468800264/"},{"name":"彼得石手排","element":"多元","bead":15,"wrist":18,"ring":null,"chain":null,"cost":298,"qty":0,"date":"2025-09-13","efficacy":"洞察力,變革","safe":0,"link":"https://shopee.tw/product/1505773854/42568778734/"},{"name":"四季幽靈手排","element":"多元","bead":15,"wrist":19,"ring":null,"chain":null,"cost":1500,"qty":1,"date":"2025-09-13","efficacy":"招財,多元能量","safe":0,"link":"https://shopee.tw/product/1505773854/43018755079/"},{"name":"彼得石手排","element":"多元","bead":13,"wrist":18,"ring":null,"chain":null,"cost":298,"qty":1,"date":"2025-09-13","efficacy":"洞察力,變革","safe":0,"link":"https://shopee.tw/product/1505773854/42568778734/"},{"name":"西北非隕石","element":"金","bead":18,"wrist":20,"ring":null,"chain":null,"cost":500,"qty":0,"date":"2025-09-13","efficacy":"天地能量,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/43304657218/"},{"name":"綠月光","element":"金/木","bead":8,"wrist":17,"ring":null,"chain":null,"cost":null,"qty":0,"date":"2025-09-13","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/43818801448/"},{"name":"白龍宮舍利","element":"金","bead":10,"wrist":17,"ring":null,"chain":null,"cost":64,"qty":93,"date":"2025-09-13","efficacy":"淨化,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/42568847372/"},{"name":"黃龍宮舍利（珊瑚化石）","element":"土","bead":13,"wrist":15,"ring":null,"chain":null,"cost":100,"qty":13,"date":"2025-09-13","efficacy":"招財,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/47100944115/"},{"name":"血龍宮雪花舍利","element":"土","bead":16,"wrist":18,"ring":null,"chain":null,"cost":168,"qty":1,"date":"2025-09-13","efficacy":"淨化,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/44068842732/"},{"name":"血龍宮舍利","element":"土/火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":98,"qty":1,"date":"2025-09-13","efficacy":"活力,佛緣,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/44068842732/"},{"name":"血龍宮舍利","element":"土/火","bead":14,"wrist":18,"ring":null,"chain":null,"cost":126,"qty":1,"date":"2025-09-13","efficacy":"活力,佛緣,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/44068842732/"},{"name":"黃龍宮舍利","element":"土","bead":15,"wrist":18,"ring":null,"chain":null,"cost":150,"qty":6,"date":"2025-09-13","efficacy":"招財,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/47100944115/"},{"name":"黃龍宮舍利","element":"土","bead":16,"wrist":18,"ring":null,"chain":null,"cost":164,"qty":3,"date":"2025-09-13","efficacy":"招財,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/47100944115/"},{"name":"黃龍宮舍利","element":"土","bead":13,"wrist":18,"ring":null,"chain":null,"cost":110,"qty":2,"date":"2025-09-13","efficacy":"招財,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/47100944115/"},{"name":"黃龍宮舍利","element":"土","bead":11,"wrist":18,"ring":null,"chain":null,"cost":80,"qty":1,"date":"2025-09-13","efficacy":"招財,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/47100944115/"},{"name":"血龍宮舍利鼓珠","element":"土/火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":90,"qty":41,"date":"2025-09-13","efficacy":"活力,佛緣,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/44068842732/"},{"name":"血龍宮舍利鼓珠（白）","element":"土/金","bead":13,"wrist":18,"ring":null,"chain":null,"cost":110,"qty":6,"date":"2025-09-13","efficacy":"淨化,佛緣","safe":0,"link":"https://shopee.tw/product/1505773854/44068842732/"},{"name":"紅花碧玉手排","element":"火","bead":29,"wrist":19,"ring":null,"chain":null,"cost":185,"qty":11,"date":"2025-09-13","efficacy":"活力,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/26041517461/"},{"name":"阿富汗碧璽","element":"火","bead":6,"wrist":15,"ring":null,"chain":null,"cost":2800,"qty":1,"date":"2025-09-19","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/40520027871/"},{"name":"摩根石","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":100,"qty":10,"date":"2025-09-19","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/53555994490/"},{"name":"糖果碧璽","element":"火","bead":10,"wrist":17,"ring":null,"chain":null,"cost":149,"qty":16,"date":"2025-09-19","efficacy":"桃花,活力","safe":0,"link":"https://shopee.tw/product/1505773854/40613612174/"},{"name":"紫水晶","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":399,"qty":1,"date":"2025-09-19","efficacy":"靈性,助眠","safe":0,"link":"https://shopee.tw/product/1505773854/27937625877/"},{"name":"綠碧璽","element":"木","bead":11,"wrist":17,"ring":null,"chain":null,"cost":800,"qty":1,"date":"2025-09-19","efficacy":"療癒,招財,健康","safe":0,"link":"https://shopee.tw/product/1505773854/41920095076/"},{"name":"堇青石","element":"水","bead":10,"wrist":16,"ring":null,"chain":null,"cost":399,"qty":1,"date":"2025-09-19","efficacy":"直覺,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/44954812931/"},{"name":"設計款A","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":160,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款B","element":"多元","bead":8,"wrist":14,"ring":null,"chain":null,"cost":105,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款C","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":70,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款D","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":190,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款E","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":105,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款F","element":"多元","bead":7,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"設計款G","element":"多元","bead":8,"wrist":15,"ring":null,"chain":null,"cost":70,"qty":0,"date":"2025-09-23","efficacy":null,"safe":0,"link":null},{"name":"黑曜石貔貅（一對）","element":"水","bead":null,"wrist":null,"ring":null,"chain":null,"cost":1500,"qty":0,"date":"2025-09-26","efficacy":"擋煞,招財","safe":0,"link":"https://shopee.tw/product/1505773854/26042255926/"},{"name":"抹茶幽靈","element":"木","bead":10,"wrist":16,"ring":null,"chain":null,"cost":4500,"qty":1,"date":"2025-10-13","efficacy":"招財,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/27792867376/"},{"name":"多寶隕石手鍊","element":"金","bead":null,"wrist":18,"ring":null,"chain":null,"cost":2800,"qty":1,"date":"2025-10-18","efficacy":"天地能量,多元能量","safe":0,"link":"https://shopee.tw/product/1505773854/47750296245/"},{"name":"海藍寶","element":"水","bead":14,"wrist":17,"ring":null,"chain":null,"cost":6800,"qty":1,"date":"2025-11-05","efficacy":"溝通,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/56150885866/"},{"name":"彩超七圓珠","element":"多元","bead":8,"wrist":16,"ring":null,"chain":null,"cost":666,"qty":1,"date":"2025-11-12","efficacy":"多元能量,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/42213545516/"},{"name":"銀曜項鍊（關公）","element":"金","bead":null,"wrist":null,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2025-11-12","efficacy":"擋煞,權威","safe":0,"link":"https://shopee.tw/product/1505773854/57703495067/"},{"name":"金曜項鍊（龍牌）","element":"金","bead":null,"wrist":null,"ring":null,"chain":null,"cost":200,"qty":2,"date":"2025-11-12","efficacy":"擋煞,招財,權威","safe":0,"link":"https://shopee.tw/product/1505773854/57703495067/"},{"name":"銀曜項鍊（九尾狐）","element":"金","bead":null,"wrist":null,"ring":null,"chain":null,"cost":200,"qty":0,"date":"2025-11-12","efficacy":"桃花,魅力","safe":0,"link":"https://shopee.tw/product/1505773854/57703495067/"},{"name":"黑曜項鍊無事牌","element":"水","bead":null,"wrist":null,"ring":null,"chain":null,"cost":188,"qty":0,"date":"2025-11-12","efficacy":"擋煞,平安","safe":0,"link":"https://shopee.tw/product/1505773854/47851655181/"},{"name":"太極石設計款","element":"土","bead":null,"wrist":null,"ring":null,"chain":null,"cost":900,"qty":0,"date":"2025-11-18","efficacy":"平衡,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/46101667575/"},{"name":"波斯瑪腦設計款","element":"土","bead":null,"wrist":16,"ring":null,"chain":null,"cost":600,"qty":1,"date":"2025-11-18","efficacy":"穩定,美感","safe":0,"link":"https://shopee.tw/product/1505773854/47851657774/"},{"name":"煙花雨薔葳石","element":"火","bead":9,"wrist":16,"ring":null,"chain":null,"cost":1100,"qty":2,"date":"2025-11-24","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/43421584330/"},{"name":"紅瑪腦","element":"火","bead":8,"wrist":14,"ring":null,"chain":null,"cost":100,"qty":2,"date":"2025-11-24","efficacy":"活力,健康","safe":0,"link":"https://shopee.tw/product/1505773854/40454675996/"},{"name":"天鐵五行設計款","element":"金","bead":null,"wrist":16,"ring":null,"chain":null,"cost":2800,"qty":0,"date":"2025-11-26","efficacy":"五行平衡,擋煞","safe":0,"link":null},{"name":"白水晶手排","element":"金","bead":14,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2025-12-01","efficacy":"淨化,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/26691327991/"},{"name":"綠水晶隨型","element":"木","bead":16,"wrist":15,"ring":null,"chain":null,"cost":1000,"qty":1,"date":"2025-12-03","efficacy":"療癒,健康","safe":0,"link":"https://shopee.tw/product/1505773854/51802489972/"},{"name":"海藍寶手排","element":"水","bead":16,"wrist":19,"ring":null,"chain":null,"cost":1500,"qty":1,"date":"2025-12-04","efficacy":"溝通,勇氣","safe":0,"link":"https://shopee.tw/product/1505773854/40326983563/"},{"name":"銀曜石五行設計款","element":"金","bead":14,"wrist":18,"ring":null,"chain":null,"cost":1830,"qty":0,"date":"2025-12-16","efficacy":"擋煞,平衡","safe":0,"link":null},{"name":"藍虎眼","element":"水","bead":17,"wrist":17,"ring":null,"chain":null,"cost":3900,"qty":1,"date":"2025-12-23","efficacy":"溝通,洞察力","safe":0,"link":"https://shopee.tw/product/1505773854/51602141597/"},{"name":"彩虹黑曜石","element":"水","bead":14,"wrist":17,"ring":null,"chain":null,"cost":900,"qty":2,"date":"2025-12-30","efficacy":"擋煞,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/49753934705/"},{"name":"情侶對鍊","element":"多元","bead":10,"wrist":18,"ring":null,"chain":null,"cost":582,"qty":1,"date":"2026-01-06","efficacy":null,"safe":0,"link":"https://shopee.tw/product/1505773854/29934554561/"},{"name":"冰藍小熊","element":"水","bead":10,"wrist":15,"ring":null,"chain":null,"cost":207,"qty":1,"date":"2026-01-06","efficacy":"靜心,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/44654230719/"},{"name":"紅膠花設計款","element":"火","bead":6,"wrist":17,"ring":null,"chain":null,"cost":207,"qty":1,"date":"2026-01-06","efficacy":"桃花,活力","safe":0,"link":"https://shopee.tw/product/1505773854/56156003307/"},{"name":"沉香無事牌","element":"木","bead":23,"wrist":69,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2026-01-09","efficacy":"靜心,安神","safe":0,"link":"https://shopee.tw/product/1505773854/55104360444/"},{"name":"老山檀香圓珠","element":"木","bead":10,"wrist":15,"ring":null,"chain":null,"cost":1900,"qty":1,"date":"2026-01-12","efficacy":"靜心,安神","safe":0,"link":"https://shopee.tw/product/1505773854/45554520223/"},{"name":"白水茶晶設計款","element":"金/水","bead":10,"wrist":15,"ring":null,"chain":null,"cost":207,"qty":1,"date":"2026-01-16","efficacy":"淨化,穩定","safe":0,"link":"https://shopee.tw/product/1505773854/45104807694/"},{"name":"鷹眼堇青石設計款","element":"水","bead":10,"wrist":15,"ring":null,"chain":null,"cost":350,"qty":1,"date":"2026-01-16","efficacy":"洞察力,直覺","safe":0,"link":"https://shopee.tw/product/1505773854/52354201158/"},{"name":"綠檀木手鍊","element":"木","bead":15,"wrist":18,"ring":null,"chain":null,"cost":60,"qty":1,"date":"2026-01-27","efficacy":"靜心,安神","safe":0,"link":"https://shopee.tw/product/1505773854/55656689575/"},{"name":"綠檀木手鍊","element":"木","bead":12,"wrist":17,"ring":null,"chain":null,"cost":35,"qty":5,"date":"2026-01-27","efficacy":"靜心,安神","safe":0,"link":"https://shopee.tw/product/1505773854/55656689575/"},{"name":"白阿賽設計款","element":"金","bead":8,"wrist":14,"ring":null,"chain":null,"cost":160,"qty":1,"date":"2026-01-29","efficacy":"淨化,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/57807384161/"},{"name":"金太陽","element":"金","bead":12,"wrist":17,"ring":null,"chain":null,"cost":4500,"qty":1,"date":"2026-02-03","efficacy":"招財,自信","safe":0,"link":"https://shopee.tw/product/1505773854/55655755172/"},{"name":"變色貔貅（小）","element":"多元","bead":null,"wrist":null,"ring":null,"chain":null,"cost":500,"qty":1,"date":"2026-02-03","efficacy":null,"safe":0,"link":"https://shopee.tw/product/1505773854/55205805073/"},{"name":"變色貔貅（中）","element":"多元","bead":null,"wrist":null,"ring":null,"chain":null,"cost":650,"qty":1,"date":"2026-02-03","efficacy":null,"safe":0,"link":"https://shopee.tw/product/1505773854/55205805073/"},{"name":"變色貔貅（大）","element":"多元","bead":null,"wrist":null,"ring":null,"chain":null,"cost":830,"qty":1,"date":"2026-02-03","efficacy":null,"safe":0,"link":"https://shopee.tw/product/1505773854/55205805073/"},{"name":"白松石x黑曜石設計款","element":"金","bead":8,"wrist":13,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-02-09","efficacy":"淨化,擋煞","safe":0,"link":"https://shopee.tw/product/1505773854/48756013603/"},{"name":"紫黃白水設計款","element":"火/土/金","bead":7,"wrist":13,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-02-09","efficacy":"招財,靈性,淨化","safe":0,"link":"https://shopee.tw/product/1505773854/51302980241/"},{"name":"摩根石設計款","element":"火","bead":12.5,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-02-09","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/53555994490/"},{"name":"紅幽靈設計款","element":"火","bead":15,"wrist":15,"ring":null,"chain":null,"cost":180,"qty":1,"date":"2026-02-09","efficacy":"事業,活力","safe":0,"link":"https://shopee.tw/product/1505773854/56156003307/"},{"name":"紫黃晶設計款","element":"火/土","bead":11,"wrist":16,"ring":null,"chain":null,"cost":180,"qty":1,"date":"2026-02-23","efficacy":"招財,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/51302980241/"},{"name":"俄羅斯草莓晶","element":"火","bead":12,"wrist":17,"ring":null,"chain":null,"cost":1500,"qty":4,"date":"2026-02-26","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/55406695947/"},{"name":"俄羅斯草莓晶","element":"火","bead":13,"wrist":17,"ring":null,"chain":null,"cost":2000,"qty":1,"date":"2026-02-26","efficacy":"桃花,人緣","safe":0,"link":"https://shopee.tw/product/1505773854/55406695947/"},{"name":"綠松紅石榴設計款","element":"木/火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2026-03-18","efficacy":"健康,活力","safe":0,"link":null},{"name":"綠東菱紅瑪瑙設計款","element":"木/火","bead":10,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2026-03-18","efficacy":"招財,活力","safe":0,"link":null},{"name":"黑曜石紫水晶設計款(馬)","element":"水/火","bead":8,"wrist":16,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2026-03-18","efficacy":"擋煞,事業","safe":0,"link":"https://shopee.tw/product/1505773854/56357364355/"},{"name":"綠東菱紫水晶設計款","element":"木/火","bead":8,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2026-03-18","efficacy":"招財,靈性","safe":0,"link":null},{"name":"薰衣草紫水晶設計款","element":"火","bead":9,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"助眠,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/56307398190/"},{"name":"粉晶紅紋石設計款","element":"火","bead":10.5,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"桃花,療癒","safe":0,"link":"https://shopee.tw/product/1505773854/45107414071/"},{"name":"黃水晶白阿賽設計款","element":"土/金","bead":8.5,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"招財,淨化","safe":0,"link":"https://shopee.tw/product/1505773854/57807384161/"},{"name":"黑曜石紫水晶設計款","element":"水/火","bead":8.5,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"擋煞,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/56357364355/"},{"name":"螢石小熊設計款","element":"水/木","bead":12,"wrist":15,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2026-03-18","efficacy":"專注,學業","safe":0,"link":"https://shopee.tw/product/1505773854/45757394202/"},{"name":"粉水晶紫水晶設計款","element":"火","bead":10,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"桃花,靈性","safe":0,"link":"https://shopee.tw/product/1505773854/53555994490/"},{"name":"葡萄石白水晶設計款","element":"金/木","bead":10,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-03-18","efficacy":"療癒,淨化","safe":0,"link":"https://shopee.tw/product/1505773854/54207363501/"},{"name":"紫水晶月光石設計款","element":"火/水","bead":8.5,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-04-06","efficacy":"安神助眠,平衡情緒","safe":0,"link":"https://shopee.tw/product/1505773854/55108290629/"},{"name":"紫水晶粉晶設計款","element":"火","bead":8.5,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-04-06","efficacy":"安神助眠,招人緣桃花","safe":0,"link":"https://shopee.tw/product/1505773854/40629789150/"},{"name":"銀曜貔貅紫水設計款","element":"火/水","bead":9.5,"wrist":15,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2026-04-18","efficacy":"靜心、擋煞、助眠","safe":0,"link":"https://shopee.tw/product/1505773854/57009037439/"},{"name":"鑽切紫水綠東菱設計款","element":"水/火/木","bead":8.5,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-04-18","efficacy":"招人緣、貴人、正財、助思緒清晰","safe":0,"link":"https://shopee.tw/product/1505773854/51609034083/"},{"name":"四葉草紫水金髮設計款","element":"水/火/金","bead":8.5,"wrist":14,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-04-18","efficacy":"招財、強化決斷力、幸運加持","safe":0,"link":"https://shopee.tw/product/1505773854/52259043608/"},{"name":"硨磲翡翠藍文石設計款","element":"金/水","bead":8.5,"wrist":19,"ring":null,"chain":null,"cost":259,"qty":0,"date":"2026-04-23","efficacy":"保護穩定、清理雜念","safe":0,"link":null},{"name":"藍紋石月光石設計款","element":"金/水","bead":8.5,"wrist":15,"ring":null,"chain":null,"cost":150,"qty":0,"date":"2026-04-23","efficacy":"安定情緒、直覺提升","safe":0,"link":null},{"name":"綠龍晶","element":"木","bead":10.5,"wrist":16,"ring":null,"chain":null,"cost":520,"qty":1,"date":"2026-04-24","efficacy":"招貴人、穩定情緒、事業成長","safe":0,"link":"https://shopee.tw/product/1505773854/57559427241/"},{"name":"紅膠花蛋面手鍊","element":"火/金","bead":null,"wrist":15,"ring":null,"chain":null,"cost":4195,"qty":1,"date":"2026-05-09","efficacy":"提升行動感與自信感、增加正向吸引力與個人魅力 ","safe":0,"link":"https://shopee.tw/product/1505773854/55260216795/"},{"name":"紅膠花戒指","element":"火/金","bead":null,"wrist":20,"ring":null,"chain":null,"cost":1200,"qty":1,"date":"2026-05-09","efficacy":"增添自信與氣勢、幫助穩定個人節奏感","safe":0,"link":"https://shopee.tw/product/1505773854/48260246101/"},{"name":"紅膠花戒指","element":"火/金","bead":null,"wrist":19.4,"ring":null,"chain":null,"cost":1200,"qty":1,"date":"2026-05-09","efficacy":"增添自信與氣勢、幫助穩定個人節奏感","safe":0,"link":"https://shopee.tw/product/1505773854/50860230757/"},{"name":"紅膠花吊墜","element":"火/金","bead":null,"wrist":40,"ring":null,"chain":null,"cost":800,"qty":1,"date":"2026-05-09","efficacy":"增添自信與氣勢、幫助穩定個人節奏感","safe":0,"link":"https://shopee.tw/product/1505773854/54760346804/"},{"name":"紅膠花吊墜","element":"火/金","bead":null,"wrist":60,"ring":null,"chain":null,"cost":800,"qty":1,"date":"2026-05-09","efficacy":"增添自信與氣勢、幫助穩定個人節奏感","safe":0,"link":"https://shopee.tw/product/1505773854/47360363420/"},{"name":"半鐲紅瑪瑙膠花設計款","element":"火","bead":10,"wrist":15,"ring":null,"chain":null,"cost":200,"qty":1,"date":"2026-05-23","efficacy":"穩定情緒 增強行動力","safe":0,"link":null},{"name":"蛋面紅幽黃虎天河計設款","element":"火/土","bead":8,"wrist":16,"ring":null,"chain":null,"cost":150,"qty":1,"date":"2026-05-23","efficacy":null,"safe":0,"link":null}],"lookup":[{"name":"俄羅斯草莓晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,人緣","fit":"用神喜火","note":null},{"name":"冰藍小熊","element":"水","category":"天然水晶","form":"小熊","efficacy":"靜心,療癒","fit":"用神喜水","note":null},{"name":"利比亞黃金隕石","element":"金/火","category":"隕石/天鐵","form":"圓珠","efficacy":"招財,靈性,意志力","fit":"喜金或火","note":null},{"name":"咖啡鈦太陽花手排","element":"金","category":"髮晶類","form":"手排","efficacy":"招財,穩定","fit":"用神喜金","note":null},{"name":"咖啡鈦晶手排","element":"金","category":"髮晶類","form":"手排","efficacy":"招財,穩定","fit":"用神喜金","note":null},{"name":"四季幽靈手排","element":"多元","category":"幽靈類","form":"手排","efficacy":"招財,多元能量","fit":"各命格皆宜","note":null},{"name":"堇青石","element":"水","category":"天然水晶","form":"圓珠","efficacy":"直覺,靈性","fit":"用神喜水","note":null},{"name":"多寶隕石手鍊","element":"金","category":"隕石/天鐵","form":"圓珠","efficacy":"天地能量,多元能量","fit":"用神喜金","note":null},{"name":"大地瑪腦手排","element":"土","category":"瑪腦類","form":"手排","efficacy":"穩定,安全感","fit":"用神喜土","note":null},{"name":"天河石貔貅","element":"水/木","category":"貔貅/雕件","form":"貔貅","efficacy":"溝通,招財","fit":"喜水或木","note":null},{"name":"天鐵五行設計款","element":"金","category":"隕石/天鐵","form":"設計款","efficacy":"五行平衡,擋煞","fit":"用神喜金","note":null},{"name":"天鐵貔貅（金）","element":"金","category":"隕石/天鐵","form":"貔貅","efficacy":"招財,擋煞,天地能量","fit":"用神喜金","note":null},{"name":"天鐵貔貅（銀）","element":"金","category":"隕石/天鐵","form":"貔貅","efficacy":"招財,擋煞,天地能量","fit":"用神喜金","note":null},{"name":"太極石設計款","element":"土","category":"設計款","form":"設計款","efficacy":"平衡,穩定","fit":"用神喜土","note":null},{"name":"太陽花手排","element":"土","category":"天然水晶","form":"手排","efficacy":"活力,樂觀","fit":"用神喜土","note":null},{"name":"彩色天鐵手排","element":"金","category":"隕石/天鐵","form":"手排","efficacy":"擋煞,天地能量","fit":"用神喜金","note":null},{"name":"彩色天鐵手鍊","element":"金","category":"隕石/天鐵","form":"圓珠","efficacy":"擋煞,天地能量","fit":"用神喜金","note":null},{"name":"彩色草莓晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,人緣","fit":"用神喜火","note":null},{"name":"彩虹黑曜石","element":"水","category":"曜石類","form":"圓珠","efficacy":"擋煞,療癒","fit":"用神喜水","note":null},{"name":"彩超七","element":"多元","category":"天然水晶","form":"圓珠","efficacy":"多元能量,靈性","fit":"各命格皆宜","note":null},{"name":"彩超七圓珠","element":"多元","category":"天然水晶","form":"圓珠","efficacy":"多元能量,靈性","fit":"各命格皆宜","note":null},{"name":"彩銅超七","element":"多元","category":"天然水晶","form":"圓珠","efficacy":"多元能量,招財","fit":"各命格皆宜","note":null},{"name":"彩閃靈","element":"多元","category":"天然水晶","form":"圓珠","efficacy":"多元能量,淨化","fit":"各命格皆宜","note":null},{"name":"彩髮圓珠","element":"多元","category":"髮晶類","form":"圓珠","efficacy":"多元能量,招財","fit":"各命格皆宜","note":null},{"name":"彼得石手排","element":"多元","category":"天然水晶","form":"手排","efficacy":"洞察力,變革","fit":"各命格皆宜","note":null},{"name":"彼得石貔貅","element":"多元","category":"貔貅/雕件","form":"貔貅","efficacy":"洞察力,招財","fit":"各命格皆宜","note":null},{"name":"情侶對鍊","element":"多元","category":"天然水晶","form":"圓珠","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"抹茶幽靈","element":"木","category":"幽靈類","form":"圓珠","efficacy":"招財,療癒","fit":"用神喜木","note":null},{"name":"摩根石","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"摩根石設計款","element":"火","category":"設計款","form":"設計款","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"星光草苺晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,人緣","fit":"用神喜火","note":null},{"name":"月光石","element":"金","category":"天然水晶","form":"圓珠","efficacy":"桃花,直覺,助眠","fit":"用神喜金","note":null},{"name":"月光石貔貅","element":"金","category":"貔貅/雕件","form":"貔貅","efficacy":"桃花,招財","fit":"用神喜金","note":null},{"name":"東陵玉","element":"木","category":"天然水晶","form":"圓珠","efficacy":"招財,健康","fit":"用神喜木","note":null},{"name":"沉香無事牌","element":"木","category":"木質/香品","form":"無事牌","efficacy":"靜心,安神","fit":"用神喜木","note":null},{"name":"波斯瑪腦設計款","element":"土","category":"瑪腦類","form":"設計款","efficacy":"穩定,美感","fit":"用神喜土","note":null},{"name":"海藍寶","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,勇氣","fit":"用神喜水","note":null},{"name":"海藍寶手排","element":"水","category":"天然水晶","form":"手排","efficacy":"溝通,勇氣","fit":"用神喜水","note":null},{"name":"煙花雨薔葳石","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"白幽靈","element":"金","category":"幽靈類","form":"圓珠","efficacy":"淨化,事業","fit":"用神喜金","note":null},{"name":"白松石x黑曜石設計款","element":"金","category":"曜石類","form":"設計款","efficacy":"淨化,擋煞","fit":"用神喜金","note":null},{"name":"白水晶","element":"金","category":"天然水晶","form":"圓珠","efficacy":"淨化,擋煞","fit":"用神喜金","note":null},{"name":"白水晶手排","element":"金","category":"天然水晶","form":"手排","efficacy":"淨化,擋煞","fit":"用神喜金","note":null},{"name":"白水晶貔貅","element":"金","category":"貔貅/雕件","form":"貔貅","efficacy":"招財,擋煞","fit":"用神喜金","note":null},{"name":"白水晶鳳凰項鍊","element":"金","category":"項鍊","form":"項鍊","efficacy":"淨化,重生","fit":"用神喜金","note":null},{"name":"白水茶晶設計款","element":"金/水","category":"設計款","form":"設計款","efficacy":"淨化,穩定","fit":"喜金或水","note":null},{"name":"白阿賽設計款","element":"金","category":"設計款","form":"設計款","efficacy":"淨化,靈性","fit":"用神喜金","note":null},{"name":"白龍宮舍利","element":"金","category":"龍宮舍利","form":"圓珠","efficacy":"淨化,佛緣","fit":"用神喜金","note":null},{"name":"粉晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,人緣","fit":"用神喜火","note":null},{"name":"粉晶手排","element":"火","category":"天然水晶","form":"手排","efficacy":"桃花,人緣","fit":"用神喜火","note":null},{"name":"粉晶紅紋石設計款","element":"火","category":"設計款","form":"設計款","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"粉水晶紫水晶設計款","element":"火","category":"設計款","form":"設計款","efficacy":"桃花,靈性","fit":"用神喜火","note":null},{"name":"粉紅碧璽圓珠","element":"火","category":"碧璽類","form":"圓珠","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"糖果碧璽","element":"火","category":"碧璽類","form":"圓珠","efficacy":"桃花,活力","fit":"用神喜火","note":null},{"name":"紅幽靈設計款","element":"火","category":"幽靈類","form":"設計款","efficacy":"事業,活力","fit":"用神喜火","note":null},{"name":"紅瑪腦","element":"火","category":"瑪腦類","form":"圓珠","efficacy":"活力,健康","fit":"用神喜火","note":null},{"name":"紅膠花設計款","element":"火","category":"設計款","form":"設計款","efficacy":"桃花,活力","fit":"用神喜火","note":null},{"name":"紅花碧玉手排","element":"火","category":"天然水晶","form":"手排","efficacy":"活力,療癒","fit":"用神喜火","note":null},{"name":"紅虎眼","element":"火","category":"天然水晶","form":"圓珠","efficacy":"活力,勇氣","fit":"用神喜火","note":null},{"name":"紫水晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"靈性,助眠","fit":"用神喜火","note":null},{"name":"紫水晶三圈","element":"火","category":"天然水晶","form":"三圈","efficacy":"靈性,助眠","fit":"用神喜火","note":null},{"name":"紫牙烏","element":"火","category":"天然水晶","form":"圓珠","efficacy":"活力,健康","fit":"用神喜火","note":null},{"name":"紫金砂","element":"火","category":"天然水晶","form":"圓珠","efficacy":"靈性,能量","fit":"用神喜火","note":null},{"name":"紫黃晶設計款","element":"火/土","category":"設計款","form":"設計款","efficacy":"招財,靈性","fit":"喜火或土","note":null},{"name":"紫黃白水設計款","element":"火/土/金","category":"設計款","form":"設計款","efficacy":"招財,靈性,淨化","fit":"喜火土金","note":null},{"name":"紫龍晶","element":"火","category":"天然水晶","form":"圓珠","efficacy":"靈性,療癒","fit":"用神喜火","note":null},{"name":"綠幽靈","element":"木","category":"幽靈類","form":"圓珠","efficacy":"招財,事業","fit":"用神喜木","note":null},{"name":"綠月光","element":"金/木","category":"天然水晶","form":"圓珠","efficacy":"桃花,療癒","fit":"喜金或木","note":null},{"name":"綠東菱紅瑪瑙設計款","element":"木/火","category":"瑪腦類","form":"設計款","efficacy":"招財,活力","fit":"喜木或火","note":null},{"name":"綠東菱紫水晶設計款","element":"木/火","category":"設計款","form":"設計款","efficacy":"招財,靈性","fit":"喜木或火","note":null},{"name":"綠松紅石榴設計款","element":"木/火","category":"設計款","form":"設計款","efficacy":"健康,活力","fit":"喜木或火","note":null},{"name":"綠檀木手鍊","element":"木","category":"木質/香品","form":"圓珠","efficacy":"靜心,安神","fit":"用神喜木","note":null},{"name":"綠水晶隨型","element":"木","category":"天然水晶","form":"隨型","efficacy":"療癒,健康","fit":"用神喜木","note":null},{"name":"綠碧璽","element":"木","category":"碧璽類","form":"圓珠","efficacy":"療癒,招財,健康","fit":"用神喜木","note":null},{"name":"綠髮晶手排","element":"木","category":"髮晶類","form":"手排","efficacy":"招財,事業,健康","fit":"用神喜木","note":null},{"name":"綠龍晶","element":"木","category":"天然水晶","form":"圓珠","efficacy":"療癒,事業","fit":"用神喜木","note":null},{"name":"老山檀香圓珠","element":"木","category":"木質/香品","form":"圓珠","efficacy":"靜心,安神","fit":"用神喜木","note":null},{"name":"舒俱徠石貔貅","element":"火","category":"貔貅/雕件","form":"貔貅","efficacy":"靈性,招財","fit":"用神喜火","note":null},{"name":"茶晶","element":"水","category":"天然水晶","form":"圓珠","efficacy":"穩定,擋煞,助眠","fit":"用神喜水","note":null},{"name":"葡萄石白水晶設計款","element":"金/木","category":"設計款","form":"設計款","efficacy":"療癒,淨化","fit":"喜金或木","note":null},{"name":"薔薇石","element":"火","category":"天然水晶","form":"圓珠","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"薰衣草紫水晶設計款","element":"火","category":"設計款","form":"設計款","efficacy":"助眠,靈性","fit":"用神喜火","note":null},{"name":"藍彼得圓珠","element":"水","category":"天然水晶","form":"圓珠","efficacy":"洞察力,靈性","fit":"用神喜水","note":null},{"name":"藍彼得算盤珠","element":"水","category":"天然水晶","form":"算盤珠","efficacy":"洞察力,靈性","fit":"用神喜水","note":null},{"name":"藍方解石","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,放鬆","fit":"用神喜水","note":null},{"name":"藍玉髓","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,靜心","fit":"用神喜水","note":null},{"name":"藍磷灰","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,靈性","fit":"用神喜水","note":null},{"name":"藍虎眼","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,洞察力","fit":"用神喜水","note":null},{"name":"螢石小熊設計款","element":"水/木","category":"設計款","form":"設計款","efficacy":"專注,學業","fit":"喜水或木","note":null},{"name":"血龍宮舍利","element":"土/火","category":"龍宮舍利","form":"圓珠","efficacy":"活力,佛緣,擋煞","fit":"喜土或火","note":null},{"name":"血龍宮舍利鼓珠","element":"土/火","category":"龍宮舍利","form":"鼓珠","efficacy":"活力,佛緣,擋煞","fit":"喜土或火","note":null},{"name":"血龍宮舍利鼓珠（白）","element":"土/金","category":"龍宮舍利","form":"鼓珠","efficacy":"淨化,佛緣","fit":"喜土或金","note":null},{"name":"血龍宮雪花舍利","element":"土","category":"龍宮舍利","form":"圓珠","efficacy":"淨化,佛緣","fit":"用神喜土","note":null},{"name":"西北非隕石","element":"金","category":"隕石/天鐵","form":"圓珠","efficacy":"天地能量,擋煞","fit":"用神喜金","note":null},{"name":"設計款A","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款B","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款C","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款D","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款E","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款F","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"設計款G","element":"多元","category":"設計款","form":"設計款","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"變色貔貅（中）","element":"多元","category":"貔貅/雕件","form":"貔貅","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"變色貔貅（大）","element":"多元","category":"貔貅/雕件","form":"貔貅","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"變色貔貅（小）","element":"多元","category":"貔貅/雕件","form":"貔貅","efficacy":null,"fit":"各命格皆宜","note":null},{"name":"超八","element":"多元","category":"天然水晶","form":"圓珠","efficacy":"多元能量,靈性","fit":"各命格皆宜","note":null},{"name":"透石膏","element":"金","category":"天然水晶","form":"圓珠","efficacy":"淨化,靈性提升","fit":"用神喜金","note":null},{"name":"金太陽","element":"金","category":"天然水晶","form":"圓珠","efficacy":"招財,自信","fit":"用神喜金","note":null},{"name":"金曜石","element":"金","category":"曜石類","form":"圓珠","efficacy":"擋煞,招財","fit":"用神喜金","note":null},{"name":"金曜項鍊（龍牌）","element":"金","category":"曜石類","form":"項鍊","efficacy":"擋煞,招財,權威","fit":"用神喜金","note":null},{"name":"金髮晶","element":"金","category":"髮晶類","form":"圓珠","efficacy":"招財,事業,貴人","fit":"用神喜金","note":null},{"name":"鈦晶手排","element":"金","category":"髮晶類","form":"手排","efficacy":"招財,事業,權威","fit":"用神喜金","note":null},{"name":"銀曜石五行設計款","element":"金","category":"曜石類","form":"設計款","efficacy":"擋煞,平衡","fit":"用神喜金","note":null},{"name":"銀曜項鍊（九尾狐）","element":"金","category":"曜石類","form":"項鍊","efficacy":"桃花,魅力","fit":"用神喜金","note":null},{"name":"銀曜項鍊（關公）","element":"金","category":"曜石類","form":"項鍊","efficacy":"擋煞,權威","fit":"用神喜金","note":null},{"name":"鐵膽石圓珠","element":"金","category":"天然水晶","form":"圓珠","efficacy":"擋煞,穩定","fit":"用神喜金","note":null},{"name":"鐵膽石手排","element":"金","category":"天然水晶","form":"手排","efficacy":"擋煞,穩定","fit":"用神喜金","note":null},{"name":"鑽切白水晶","element":"金","category":"天然水晶","form":"鑽切面","efficacy":"淨化,擋煞","fit":"用神喜金","note":null},{"name":"阿富汗碧璽","element":"火","category":"碧璽類","form":"圓珠","efficacy":"桃花,療癒","fit":"用神喜火","note":null},{"name":"阿拉善","element":"土","category":"天然水晶","form":"圓珠","efficacy":"穩定,擋煞","fit":"用神喜土","note":null},{"name":"青晶石","element":"水","category":"天然水晶","form":"圓珠","efficacy":"溝通,表達","fit":"用神喜水","note":null},{"name":"骨幹太陽石","element":"火","category":"天然水晶","form":"圓珠","efficacy":"自信,活力,領導力","fit":"用神喜火","note":null},{"name":"鷹眼堇青石設計款","element":"水","category":"設計款","form":"設計款","efficacy":"洞察力,直覺","fit":"用神喜水","note":null},{"name":"黃水晶","element":"土","category":"天然水晶","form":"圓珠","efficacy":"招財,自信","fit":"用神喜土","note":null},{"name":"黃水晶白阿賽設計款","element":"土/金","category":"設計款","form":"設計款","efficacy":"招財,淨化","fit":"喜土或金","note":null},{"name":"黃水晶鑽切面","element":"土","category":"天然水晶","form":"鑽切面","efficacy":"招財,自信","fit":"用神喜土","note":null},{"name":"黃龍宮舍利","element":"土","category":"龍宮舍利","form":"圓珠","efficacy":"招財,佛緣","fit":"用神喜土","note":null},{"name":"黃龍宮舍利（珊瑚化石）","element":"土","category":"龍宮舍利","form":"圓珠","efficacy":"招財,佛緣","fit":"用神喜土","note":null},{"name":"黑曜石紫水晶設計款","element":"水/火","category":"曜石類","form":"設計款","efficacy":"擋煞,靈性","fit":"喜水或火","note":null},{"name":"黑曜石紫水晶設計款(馬)","element":"水/火","category":"曜石類","form":"設計款","efficacy":"擋煞,事業","fit":"喜水或火","note":null},{"name":"黑曜石貔貅（一對）","element":"水","category":"曜石類","form":"貔貅","efficacy":"擋煞,招財","fit":"用神喜水","note":null},{"name":"黑曜磨砂心經","element":"水","category":"曜石類","form":"圓珠","efficacy":"擋煞,靜心,護身","fit":"用神喜水","note":null},{"name":"黑曜磨砂心經（桶珠）","element":"水","category":"曜石類","form":"圓珠","efficacy":"擋煞,靜心,護身","fit":"用神喜水","note":null},{"name":"黑曜項鍊無事牌","element":"水","category":"曜石類","form":"項鍊","efficacy":"擋煞,平安","fit":"用神喜水","note":null},{"name":"黑碧璽三圈","element":"水","category":"碧璽類","form":"三圈","efficacy":"擋煞,淨化","fit":"用神喜水","note":null},{"name":"黑閃靈","element":"水","category":"天然水晶","form":"圓珠","efficacy":"擋煞,能量","fit":"用神喜水","note":null},{"name":"黑髮手排","element":"水","category":"髮晶類","form":"手排","efficacy":"擋煞,防小人","fit":"用神喜水","note":null},{"name":"▼ 下拉選單資料（供進銷總表下拉選單使用，請勿刪除）","element":null,"category":null,"form":null,"efficacy":null,"fit":null,"note":null},{"name":"五行","element":null,"category":"分類","form":null,"efficacy":"型態","fit":null,"note":"手圍"},{"name":"金","element":null,"category":"天然水晶","form":null,"efficacy":"圓珠","fit":null,"note":"13"},{"name":"木","element":null,"category":"碧璽類","form":null,"efficacy":"手排","fit":null,"note":"14"},{"name":"水","element":null,"category":"幽靈類","form":null,"efficacy":"算盤珠","fit":null,"note":"15"},{"name":"火","element":null,"category":"髮晶類","form":null,"efficacy":"鼓珠","fit":null,"note":"16"},{"name":"土","element":null,"category":"瑪腦類","form":null,"efficacy":"鑽切面","fit":null,"note":"17"},{"name":"金/水","element":null,"category":"曜石類","form":null,"efficacy":"隨型","fit":null,"note":"18"},{"name":"金/木","element":null,"category":"隕石/天鐵","form":null,"efficacy":"三圈","fit":null,"note":"19"},{"name":"金/火","element":null,"category":"龍宮舍利","form":null,"efficacy":"項鍊","fit":null,"note":"20"},{"name":"木/火","element":null,"category":"設計款","form":null,"efficacy":"無事牌","fit":null,"note":"21"},{"name":"水/木","element":null,"category":"木質/香品","form":null,"efficacy":"貔貅","fit":null,"note":null},{"name":"水/火","element":null,"category":"貔貅/雕件","form":null,"efficacy":"設計款","fit":null,"note":null},{"name":"火/土","element":null,"category":"項鍊","form":null,"efficacy":"小熊","fit":null,"note":null},{"name":"土/金","element":null,"category":"其他","form":null,"efficacy":"其他","fit":null,"note":null},{"name":"土/火","element":null,"category":null,"form":null,"efficacy":null,"fit":null,"note":null},{"name":"火/土/金","element":null,"category":null,"form":null,"efficacy":null,"fit":null,"note":null},{"name":"多元","element":null,"category":null,"form":null,"efficacy":null,"fit":null,"note":null}],"params":{"蝦皮加價倍率":0.6,"蝦皮抽成%":0.2,"蝦皮運費":60,"固定成本":30,"利潤封頂":5000,"安全庫存(預設)":0}};
+
+/* ───────── state & persistence ───────── */
+const KEY='jingyue_inv_v6';
+const PREFS='jingyue_inv_prefs_v6';
+let memOnly=false;
+let state={items:[],lookup:[],params:{},showAllDims:false,editId:null,group:false,
+  life:'all',elems:new Set(),lowOnly:false,sort:'def',expandedId:null,statsOpen:false,lkEditId:null};
+
+function loadPrefs(){try{const r=localStorage.getItem(PREFS);if(r){const o=JSON.parse(r);
+  state.sort=o.sort||'def';state.group=!!o.group;state.life=o.life||'all';
+  state.elems=new Set(Array.isArray(o.elems)?o.elems:[]);state.lowOnly=!!o.lowOnly;state.statsOpen=!!o.statsOpen;}}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREFS,JSON.stringify({sort:state.sort,group:state.group,life:state.life,
+  elems:[...state.elems],lowOnly:state.lowOnly,statsOpen:state.statsOpen}));}catch(e){}}
+
+const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費',fix:'固定成本',cap:'利潤封頂',safe:'安全庫存(預設)'};
+function p(k){return Number(state.params[PKEYS[k]])||0;}
+const uid=()=>'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+
+function load(){
+  let saved=null;
+  try{const raw=localStorage.getItem(KEY); if(raw) saved=JSON.parse(raw);}catch(e){memOnly=true;}
+  if(saved){state.items=saved.items;state.lookup=saved.lookup;state.params=saved.params;}
+  else{
+    state.params=JSON.parse(JSON.stringify(DATA.params));
+    state.lookup=DATA.lookup.map(x=>({...x}));
+    state.items=DATA.items.map(x=>({_id:uid(),...x}));
+  }
+  state.items.forEach(it=>{if(!it._id)it._id=uid();});
+  try{localStorage.getItem(KEY);}catch(e){memOnly=true;}
+  if(memOnly) document.getElementById('memNote').style.display='block';
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify({items:state.items,lookup:state.lookup,params:state.params}));}
+  catch(e){memOnly=true;document.getElementById('memNote').style.display='block';}
+}
+
+/* ───────── pricing (exact match to spreadsheet) ───────── */
+function num(x){return (x===''||x==null||isNaN(x))?null:Number(x);}
+function shopeePrice(cost){const c=num(cost);if(c===null)return null;return Math.ceil((c*(1+p('markup'))+p('fix')+p('ship'))/(1-p('comm')));}
+function suggestPrice(cost){const c=num(cost);if(c===null)return null;const s=shopeePrice(c);const cap=Math.ceil((c+p('cap'))/(1-p('comm')));return Math.min(s,cap);}
+function stockStatus(qty,safe){const q=num(qty);if(q===null)return null;const s=num(safe)??0;if(q<=0)return{t:'缺貨',c:'out'};if(q<=s)return{t:'補貨',c:'low'};return{t:'充足',c:'ok'};}
+
+/* ───────── five-element colors / form fields ───────── */
+const ECOLOR={'金':'var(--jin)','木':'var(--mu)','水':'var(--shui)','火':'var(--huo)','土':'var(--tu)','多元':'var(--duo)'};
+const ELEM_RANK={'金':0,'木':1,'水':2,'火':3,'土':4};
+function elemRank(e){if(!e)return 9;if(String(e).includes('多元'))return 8;const f=String(e).split('/')[0].trim();return ELEM_RANK[f]??7;}
+function elemThenName(x,y){return elemRank(x.element)-elemRank(y.element)||String(x.element||'').localeCompare(y.element||'','zh-Hant')||String(x.name).localeCompare(y.name,'zh-Hant');}
+function elemColor(e){if(!e)return 'var(--muted)';if(String(e).includes('多元'))return ECOLOR['多元'];const f=String(e).split('/')[0].trim();return ECOLOR[f]||'var(--muted)';}
+function primaryElem(e){if(!e)return '其他';if(String(e).includes('多元'))return '多元';const f=String(e).split('/')[0].trim();return ['金','木','水','火','土'].includes(f)?f:'其他';}
+const FORM_FIELDS={'圓珠':['bead','wrist'],'手排':['bead','wrist'],'算盤珠':['bead','wrist'],'鼓珠':['bead','wrist'],'鑽切面':['bead','wrist'],'三圈':['bead','wrist'],'項鍊':['chain','bead'],'無事牌':['chain'],'貔貅':['wrist'],'小熊':['wrist'],'隨型':['wrist'],'設計款':['wrist']};
+function keyFields(form){return FORM_FIELDS[form]||['bead','wrist'];}
+
+const lookupMap=()=>{const m=new Map();state.lookup.forEach(c=>m.set(String(c.name).trim(),c));return m;};
+function findCrystal(name){if(!name)return null;return lookupMap().get(String(name).trim())||null;}
+function distinctElems(){const s=new Set();state.lookup.forEach(c=>{if(c.element)s.add(String(c.element));});state.items.forEach(c=>{if(c.element)s.add(String(c.element));});['金','木','水','火','土','多元'].forEach(e=>s.add(e));return [...s].sort();}
+function fitMatches(item,key){
+  if(key==='all')return true;
+  const c=findCrystal(item.name);
+  const fit=c&&c.fit?String(c.fit):'';
+  if(!fit)return false;
+  if(key==='any')return fit.includes('皆');
+  return fit.includes(key)||fit.includes('皆');
+}
+
+/* ───────── render ───────── */
+const $=id=>document.getElementById(id);
+const fmt=n=>'$'+Number(n).toLocaleString('en-US');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function computeStats(){
+  let cost=0,need=0;
+  state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,s=num(it.safe)??p('safe');cost+=c*q;if(q<=s)need++;});
+  $('stItems').textContent=state.items.length;
+  $('stNeed').textContent=need;
+  $('stCost').textContent=fmt(cost);
+  $('stNeedBox').classList.toggle('active',state.lowOnly);
+}
+function renderStatsDetail(){
+  $('statsToggle').textContent='庫存明細 '+(state.statsOpen?'▴':'▾');
+  if(!state.statsOpen){$('statsDetail').style.display='none';return;}
+  $('statsDetail').style.display='block';
+  let cost=0,retail=0;const byElem={};
+  state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,sale=suggestPrice(it.cost)??0;
+    cost+=c*q;retail+=sale*q;const k=primaryElem(it.element);byElem[k]=(byElem[k]||0)+1;});
+  const order=['金','木','水','火','土','多元','其他'].filter(k=>byElem[k]);
+  const max=Math.max(...order.map(k=>byElem[k]),1);
+  const bars=order.map(k=>{const col=elemColor(k),w=Math.round(byElem[k]/max*100);
+    return `<div class="bar-row"><span class="bl" style="color:${col}">${k}</span><span class="bt"><span class="bf" style="width:${w}%;background:${col}"></span></span><span class="bn">${byElem[k]}</span></div>`;}).join('');
+  $('statsDetail').innerHTML=`<div class="sd-vals"><div><span>零售總值</span><b>${fmt(retail)}</b></div><div><span>預估毛利</span><b style="color:var(--ok)">${fmt(retail-cost)}</b></div></div>${bars}`;
+}
+function renderChips(){
+  const order=['金','木','水','火','土','多元','其他'];
+  const counts={};state.items.forEach(it=>{const k=primaryElem(it.element);counts[k]=(counts[k]||0)+1;});
+  let html=order.filter(k=>counts[k]).map(k=>{const on=state.elems.has(k),col=elemColor(k);
+    return `<button class="chip-f${on?' on':''}" data-elem="${k}" style="${on?`border-color:${col};color:${col}`:''}">${k} ${counts[k]}</button>`;}).join('');
+  if(state.elems.size||state.lowOnly||state.life!=='all')html+=`<button class="chip-f clear" data-clear="1">✕ 清除篩選</button>`;
+  $('elemChips').innerHTML=html;
+}
+
+function specHtml(it){
+  const parts=[];
+  if(num(it.bead)!=null)parts.push(`珠徑 <b>${esc(it.bead)}</b>`);
+  if(num(it.wrist)!=null)parts.push(`手圍 <b>${esc(it.wrist)}</b>`);
+  if(num(it.ring)!=null)parts.push(`戒圍 <b>${esc(it.ring)}</b>`);
+  if(num(it.chain)!=null)parts.push(`鍊長 <b>${esc(it.chain)}</b>`);
+  if(it.efficacy)parts.push(esc(it.efficacy));
+  return parts.join('<span style="opacity:.3">·</span> ');
+}
+function cardHtml(it){
+  const col=elemColor(it.element);
+  const sale=suggestPrice(it.cost), shop=shopeePrice(it.cost);
+  const st=stockStatus(it.qty,num(it.safe)??p('safe'));
+  const saleHtml=sale!=null?`<span class="pill sale">售 ${fmt(sale)}</span>`:'';
+  const costHtml=num(it.cost)!=null?`<span class="pill cost">進 ${fmt(it.cost)}</span>`:'';
+  const stHtml=st?`<span class="st ${st.c}">${st.t}</span>`:'';
+  const open=state.expandedId===it._id;
+  const exp=open?`<div class="cardexp">
+      <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
+      <div class="exp-price">蝦皮定價 <b>${shop!=null?fmt(shop):'—'}</b> ｜ 建議售價 <b>${sale!=null?fmt(sale):'—'}</b></div>
+      <div class="exp-actions">
+        <button class="xb minus" data-act="dec" data-id="${it._id}" aria-label="數量減一">－</button>
+        <span class="xqty">數量 ${num(it.qty)??0}</span>
+        <button class="xb plus" data-act="inc" data-id="${it._id}" aria-label="數量加一">＋</button>
+        ${it.link?`<a class="xb link" href="${esc(it.link)}" target="_blank" rel="noopener">開蝦皮</a>`:''}
+        <button class="xb edit" data-act="edit" data-id="${it._id}">編輯</button>
+        <button class="xb del" data-act="del" data-id="${it._id}">刪除</button>
+      </div></div>`:'';
+  return `<div class="card${open?' open':''}" data-id="${it._id}">
+    <div class="bar" style="background:${col}"></div>
+    <div class="body">
+      <div class="ttl"><span class="nm">${esc(it.name)}</span>
+        <span class="badge" style="color:${col};border-color:${col}66">${esc(it.element||'—')}</span></div>
+      <div class="specs">${specHtml(it)||'<span style="color:var(--muted2)">尚無規格</span>'}</div>
+      <div class="priceline">${costHtml}${saleHtml}<span class="qty">×${num(it.qty)??0}</span>${stHtml}</div>
+      ${exp}
+    </div></div>`;
+}
+function adjustQty(id,delta){const it=state.items.find(x=>x._id===id);if(!it)return;it.qty=Math.max(0,(num(it.qty)??0)+delta);save();render();}
+function quickDelete(id){const it=state.items.find(x=>x._id===id);if(!it)return;if(!confirm('刪除「'+it.name+'」？此動作無法復原'))return;state.items=state.items.filter(x=>x._id!==id);if(state.expandedId===id)state.expandedId=null;save();render();toast('已刪除');}
+
+function applySort(arr){
+  const s=state.sort, a=[...arr];
+  const stOrd=it=>{const x=stockStatus(it.qty,num(it.safe)??p('safe'));return x?({out:0,low:1,ok:2}[x.c]):3;};
+  if(s==='name')a.sort((x,y)=>String(x.name).localeCompare(y.name,'zh-Hant'));
+  else if(s==='elem')a.sort(elemThenName);
+  else if(s==='qty')a.sort((x,y)=>(num(x.qty)??0)-(num(y.qty)??0));
+  else if(s==='cost')a.sort((x,y)=>(num(y.cost)??0)-(num(x.cost)??0));
+  else if(s==='date')a.sort((x,y)=>String(y.date||'').localeCompare(x.date||''));
+  else if(s==='stock')a.sort((x,y)=>stOrd(x)-stOrd(y)||(num(x.qty)??0)-(num(y.qty)??0));
+  return a;
+}
+function render(){
+  computeStats();renderStatsDetail();renderChips();
+  const q=$('q').value.trim().toLowerCase();
+  let arr=state.items.filter(it=>{
+    if(q && ![it.name,it.element,it.efficacy].some(v=>String(v||'').toLowerCase().includes(q)))return false;
+    if(!fitMatches(it,state.life))return false;
+    if(state.elems.size && !state.elems.has(primaryElem(it.element)))return false;
+    if(state.lowOnly){const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(!st||st.c==='ok')return false;}
+    return true;
+  });
+  arr=applySort(arr);
+  const list=$('list');
+  if(!arr.length){const filtered=state.items.length>0;
+    list.innerHTML=`<div class="empty"><b>${filtered?'沒有符合的品項':'庫存是空的'}</b>${filtered?'換個關鍵字或清除篩選':'點右下角 ＋ 新增第一筆'}</div>`;return;}
+  if(state.group){
+    const groups={};
+    arr.forEach(it=>{const k=it.element||'未分類';(groups[k]=groups[k]||[]).push(it);});
+    const order=Object.keys(groups).sort((a,b)=>elemRank(a)-elemRank(b)||a.localeCompare(b,'zh-Hant'));
+    list.innerHTML=order.map(k=>{
+      const col=elemColor(k);
+      return `<div class="grouphdr"><span class="dot" style="background:${col}"></span><span style="color:${col}">${esc(k)}</span><span class="ln"></span><span class="ct">${groups[k].length}</span></div>`
+        +groups[k].map(cardHtml).join('');
+    }).join('');
+  }else{
+    list.innerHTML=arr.map(cardHtml).join('');
+  }
+}
+
+/* ───────── modal: open / autofill / preview / save ───────── */
+function fillElemOptions(sel){
+  const cur=$('f_elem').value;
+  $('f_elem').innerHTML='<option value="">— 選五行 —</option>'+distinctElems().map(e=>`<option ${e===sel?'selected':''}>${esc(e)}</option>`).join('');
+  if(sel) $('f_elem').value=sel; else if(cur) $('f_elem').value=cur;
+}
+function refreshDatalist(){
+  $('crystalList').innerHTML=state.lookup.map(c=>`<option value="${esc(c.name)}">`).join('');
+}
+function applyFormFields(form){
+  const keys=keyFields(form);
+  document.querySelectorAll('.dim-field').forEach(el=>{
+    el.classList.toggle('dim-hidden',!(keys.includes(el.dataset.field)||state.showAllDims));
+  });
+  $('moreDims').style.display=state.showAllDims?'none':'block';
+}
+function findExistingItem(name){const n=String(name||'').trim();if(!n)return null;return state.items.find(it=>String(it.name).trim()===n && it._id!==state.editId)||null;}
+function showMatch(name){
+  const c=findCrystal(name);
+  const chips=$('matchChips');
+  const dup=(state.editId===null)?findExistingItem(name):null;
+  const dupChip=dup?`<span class="chip new">⚠ 庫存已有此品項（數量 ${num(dup.qty)??0}）</span>`:'';
+  if(c){
+    const tags=[];
+    if(c.category)tags.push(c.category);
+    if(c.form)tags.push(c.form);
+    if(c.fit)tags.push(c.fit);
+    chips.innerHTML=dupChip+`<span class="chip match">✓ 對照表帶入</span>`+tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('');
+    $('rememberWrap').style.display='none';
+    return c;
+  }else if(name.trim()){
+    chips.innerHTML=dupChip+`<span class="chip new">＋ 新品項，手動選五行</span>`;
+    $('rememberWrap').style.display='flex';
+  }else{chips.innerHTML='';$('rememberWrap').style.display='none';}
+  return null;
+}
+function autofillFromName(name,force){
+  const c=showMatch(name);
+  applyFormFields(c?c.form:null);
+  if(c){
+    if(force||!$('f_elem').value){fillElemOptions(c.element);}
+    if(force||!$('f_eff').value.trim()){$('f_eff').value=c.efficacy||'';}
+  }
+}
+function updatePreview(){
+  const cost=$('f_cost').value;
+  const sh=shopeePrice(cost), sg=suggestPrice(cost);
+  $('pvShopee').textContent=sh!=null?fmt(sh):'—';
+  $('pvSug').textContent=sg!=null?fmt(sg):'—';
+  const st=stockStatus($('f_qty').value, $('f_safe').value!==''?$('f_safe').value:p('safe'));
+  const el=$('pvStock');
+  if(st){el.textContent=st.t==='充足'?'庫存充足':(st.t==='缺貨'?'缺貨':'需補貨');
+    el.style.background=st.c==='ok'?'rgba(95,184,122,.16)':st.c==='low'?'rgba(224,162,63,.18)':'rgba(224,100,79,.18)';
+    el.style.color=st.c==='ok'?'var(--ok)':st.c==='low'?'var(--low)':'var(--out)';
+  }else{el.textContent='補貨狀態';el.style.background='rgba(255,255,255,.05)';el.style.color='var(--muted)';}
+}
+function openSheet(item){
+  state.editId=item?item._id:null;
+  state.showAllDims=false;
+  $('sheetTitle').textContent=item?'編輯品項':'新增品項';
+  $('delBtn').style.display=item?'block':'none';
+  refreshDatalist();
+  const g=v=>v==null?'':v;
+  $('f_name').value=item?item.name:'';
+  fillElemOptions(item?item.element:'');
+  $('f_cost').value=g(item&&item.cost); $('f_qty').value=g(item&&item.qty);
+  $('f_bead').value=g(item&&item.bead); $('f_wrist').value=g(item&&item.wrist);
+  $('f_ring').value=g(item&&item.ring); $('f_chain').value=g(item&&item.chain);
+  $('f_safe').value=item?g(item.safe):'';
+  $('f_date').value=(item&&item.date)?String(item.date).slice(0,10):new Date().toISOString().slice(0,10);
+  $('f_eff').value=g(item&&item.efficacy); $('f_link').value=g(item&&item.link);
+  if(item){showMatch(item.name);applyFormFields(findCrystal(item.name)?.form||null);state.showAllDims=true;applyFormFields(findCrystal(item.name)?.form||null);}
+  else{autofillFromName('');applyFormFields(null);}
+  updatePreview();
+  $('backdrop').classList.add('show');
+  if(!item)setTimeout(()=>$('f_name').focus(),120);
+}
+function closeSheet(){$('backdrop').classList.remove('show');}
+function collect(){
+  const v=id=>$(id).value.trim();
+  const n=v=>{const x=$(v).value.trim();return x===''?null:Number(x);};
+  return{name:v('f_name'),element:$('f_elem').value||null,bead:n('f_bead'),wrist:n('f_wrist'),
+    ring:n('f_ring'),chain:n('f_chain'),cost:n('f_cost'),qty:n('f_qty'),
+    safe:$('f_safe').value.trim()===''?null:Number($('f_safe').value),
+    date:$('f_date').value||null,efficacy:v('f_eff')||null,link:v('f_link')||null};
+}
+function saveItem(){
+  const d=collect();
+  if(!d.name){toast('請輸入品項名稱');$('f_name').focus();return;}
+  if(state.editId){
+    const it=state.items.find(x=>x._id===state.editId);
+    Object.assign(it,d);toast('已更新 '+d.name);
+  }else{
+    const ex=findExistingItem(d.name);
+    if(ex){
+      const addQty=num(d.qty)??0;
+      const ok=confirm('「'+d.name+'」庫存已有一筆（現有數量 '+(num(ex.qty)??0)+'）。\n\n確定 = 數量 +'+addQty+' 累加到現有那筆（並更新進貨日期）\n取消 = 新增為獨立的另一筆');
+      if(ok){
+        ex.qty=(num(ex.qty)??0)+addQty;
+        if(d.date)ex.date=d.date;
+        save();render();closeSheet();toast('已累加數量，現有 '+ex.qty);
+        return;
+      }
+    }
+    state.items.push({_id:uid(),...d});toast('已新增 '+d.name);
+    if($('f_remember').checked && !findCrystal(d.name) && $('rememberWrap').style.display!=='none'){
+      state.lookup.push({name:d.name,element:d.element,category:'',form:'',efficacy:d.efficacy,fit:'',note:''});
+    }
+  }
+  save();render();closeSheet();
+}
+function delItem(){
+  const it=state.items.find(x=>x._id===state.editId);if(!it)return;
+  if(!confirm('刪除「'+it.name+'」？此動作無法復原')) return;
+  state.items=state.items.filter(x=>x._id!==state.editId);
+  save();render();closeSheet();toast('已刪除');
+}
+
+/* ───────── params ───────── */
+function openParams(){
+  $('p_markup').value=p('markup');$('p_comm').value=p('comm');$('p_ship').value=p('ship');
+  $('p_fix').value=p('fix');$('p_cap').value=p('cap');$('p_safe').value=p('safe');
+  $('pBackdrop').classList.add('show');
+}
+function saveParams(){
+  state.params[PKEYS.markup]=Number($('p_markup').value)||0;
+  state.params[PKEYS.comm]=Number($('p_comm').value)||0;
+  state.params[PKEYS.ship]=Number($('p_ship').value)||0;
+  state.params[PKEYS.fix]=Number($('p_fix').value)||0;
+  state.params[PKEYS.cap]=Number($('p_cap').value)||0;
+  state.params[PKEYS.safe]=Number($('p_safe').value)||0;
+  save();render();$('pBackdrop').classList.remove('show');toast('參數已套用，定價已重算');
+}
+
+/* ───────── export / import ───────── */
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function dateStamp(){const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
+
+function openData(){$('dataBackdrop').classList.add('show');}
+function closeData(){$('dataBackdrop').classList.remove('show');}
+function backupJson(){
+  const payload={_meta:{app:'jingyue-inv',ver:'v6',exported:new Date().toISOString(),items:state.items.length},
+    items:state.items,lookup:state.lookup,params:state.params};
+  const blob=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_備份_'+dateStamp()+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1200);toast('已備份 '+state.items.length+' 筆到檔案');
+}
+function normItem(it){return {_id:it._id||uid(),name:String(it.name||'').trim(),element:(it.element??null)||null,
+  bead:num(it.bead),wrist:num(it.wrist),ring:num(it.ring),chain:num(it.chain),
+  cost:num(it.cost),qty:num(it.qty),date:it.date?String(it.date).slice(0,10):null,
+  efficacy:(it.efficacy??null)||null,safe:num(it.safe),link:(it.link??null)||null};}
+function normLook(c){return {name:String(c.name||'').trim(),element:c.element??'',category:c.category??'',
+  form:c.form??'',efficacy:c.efficacy??'',fit:c.fit??'',note:c.note??''};}
+function ensureParams(pr){const out=JSON.parse(JSON.stringify(DATA.params));if(pr&&typeof pr==='object')for(const k in PKEYS){const key=PKEYS[k];if(pr[key]!=null&&!isNaN(pr[key]))out[key]=Number(pr[key]);}return out;}
+function restoreJson(file){
+  const rd=new FileReader();
+  rd.onload=e=>{try{
+    let d=JSON.parse(e.target.result);
+    if(Array.isArray(d))d={items:d};
+    if(!d||!Array.isArray(d.items)){toast('檔案格式不符，找不到 items');return;}
+    const newItems=d.items.filter(it=>it&&(it.name!=null)).map(normItem);
+    if(!confirm('還原會以備份檔覆蓋目前全部資料（'+state.items.length+' 筆 → '+newItems.length+' 筆），確定？'))return;
+    state.items=newItems;
+    if(Array.isArray(d.lookup))state.lookup=d.lookup.filter(c=>c&&c.name).map(normLook);
+    state.params=ensureParams(d.params);
+    save();render();closeData();
+    const ver=d._meta&&d._meta.ver?d._meta.ver:'舊版';
+    toast('已還原 '+state.items.length+' 筆（'+ver+' 格式，缺欄位已自動補齊）');
+  }catch(err){toast('還原失敗：'+err.message);}};
+  rd.readAsText(file);
+}
+
+function buildWorkbook(){
+  const P=state.params, gp=k=>Number(P[k])||0;
+  const INK='FF14182A',INK2='FF11131F',GOLD='FFC9A227',GILT='FFE8CF86',DARK='FF241C07',SOFT='FFD9C79A';
+  const wb=new ExcelJS.Workbook();
+  wb.creator='靜月之光 庫存App';
+  const goldHdr=(row,labels)=>{labels.forEach((h,i)=>{const c=row.getCell(i+1);c.value=h;c.font={bold:true,color:{argb:DARK}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:GOLD}};c.alignment={horizontal:'center',vertical:'middle'};});row.height=20;};
+  let cost=0,need=0;state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,s=num(it.safe)??gp(PKEYS.safe);cost+=c*q;if(q<=s)need++;});
+
+  // ── 進銷總表 (gilt title + header, formulas) ──
+  const ws=wb.addWorksheet('進銷總表',{views:[{state:'frozen',ySplit:3}]});
+  ws.columns=[5,18,8,7,7,7,7,8,7,13,10,10,20,9,9,44].map(w=>({width:w}));
+  ws.mergeCells('A1:P1');const t=ws.getCell('A1');t.value='✦ 靜月之光 — 水晶庫存管理 ✦';
+  t.font={bold:true,size:15,color:{argb:GILT}};t.alignment={horizontal:'center',vertical:'middle'};t.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};ws.getRow(1).height=30;
+  ws.mergeCells('A2:P2');const s2=ws.getCell('A2');s2.value=`📦 ${state.items.length} 件    🔴 需補貨 ${need}    💰 庫存成本 $${cost.toLocaleString('en-US')}`;
+  s2.font={size:12,color:{argb:SOFT}};s2.alignment={horizontal:'center',vertical:'middle'};s2.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK2}};ws.getRow(2).height=22;
+  goldHdr(ws.getRow(3),['#','品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','功效','安全庫存','補貨','蝦皮連結']);
+  const EDARK={'金':'FFB7791F','木':'FF2E7D46','水':'FF2C6FB0','火':'FFC0392B','土':'FF9A6B1E','多元':'FF7A4FB0','其他':'FF555555'};
+  const exItems=[...state.items].sort(elemThenName);
+  const gcount={};exItems.forEach(it=>{const g=primaryElem(it.element);gcount[g]=(gcount[g]||0)+1;});
+  let xr=4, idx=0, prevG=null, retail=0;
+  exItems.forEach((it)=>{
+    const g=primaryElem(it.element);
+    if(g!==prevG){
+      ws.mergeCells(`A${xr}:P${xr}`);
+      const gc=ws.getCell(`A${xr}`);
+      gc.value=`　▎${g}　（${gcount[g]} 件）`;
+      gc.font={bold:true,size:12,color:{argb:EDARK[g]||'FF555555'}};
+      gc.alignment={vertical:'middle'};
+      gc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2EFE7'}};
+      gc.border={top:{style:'medium',color:{argb:GOLD}}};
+      ws.getRow(xr).height=19; xr++; prevG=g;
+    }
+    const r=xr, row=ws.getRow(r);
+    row.getCell(1).value=++idx;row.getCell(2).value=it.name;row.getCell(3).value=it.element||'';
+    row.getCell(4).value=num(it.bead);row.getCell(5).value=num(it.wrist);row.getCell(6).value=num(it.ring);row.getCell(7).value=num(it.chain);
+    row.getCell(8).value=num(it.cost);row.getCell(9).value=num(it.qty);
+    if(it.date){row.getCell(10).value=new Date(it.date);row.getCell(10).numFmt='yyyy-mm-dd';}
+    row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6)/(1-參數設定!$B$5),1))`,result:shopeePrice(it.cost)};
+    row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8)/(1-參數設定!$B$5),1)))`,result:suggestPrice(it.cost)};
+    row.getCell(13).value=it.efficacy||'';row.getCell(14).value=num(it.safe)??gp(PKEYS.safe);
+    const st=stockStatus(it.qty,num(it.safe)??gp(PKEYS.safe));
+    row.getCell(15).value={formula:`IF(I${r}="","",IF(I${r}<=0,"❌ 缺貨",IF(I${r}<=N${r},"⚠ 補貨","✅")))`,result:st?(st.c==='out'?'❌ 缺貨':st.c==='low'?'⚠ 補貨':'✅'):''};
+    if(it.link)row.getCell(16).value={text:it.link,hyperlink:it.link};
+    retail+=(suggestPrice(it.cost)??0)*(num(it.qty)??0);
+    let rf=null,oc=null;
+    if(st&&st.c==='out'){rf='FFF7E4E0';oc='FFC0392B';}
+    else if(st&&st.c==='low'){rf='FFFAF1DD';oc='FFB7791F';}
+    else if(idx%2===0){rf='FFF6F4EF';}
+    if(rf)for(let cc=1;cc<=16;cc++){row.getCell(cc).fill={type:'pattern',pattern:'solid',fgColor:{argb:rf}};}
+    if(oc)row.getCell(15).font={color:{argb:oc},bold:true};
+    xr++;
+  });
+  ws.mergeCells(`A${xr}:P${xr}`);
+  const sumc=ws.getCell(`A${xr}`);
+  sumc.value=`合計　${idx} 件　｜　庫存成本 $${cost.toLocaleString('en-US')}　｜　零售總值 $${retail.toLocaleString('en-US')}　｜　預估毛利 $${(retail-cost).toLocaleString('en-US')}`;
+  sumc.font={bold:true,color:{argb:GILT}};sumc.alignment={vertical:'middle'};
+  sumc.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};sumc.border={top:{style:'double',color:{argb:GOLD}}};
+  ws.getRow(xr).height=24;
+
+  // ── 補貨清單 (current low-stock, gilt header) ──
+  const wl=wb.addWorksheet('補貨清單');wl.columns=[18,8,6,8,8].map(w=>({width:w}));
+  wl.mergeCells('A1:E1');wl.getCell('A1').value='🔴 需補貨清單（匯出當下計算）';wl.getCell('A1').font={bold:true,color:{argb:GILT}};wl.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};wl.getRow(1).height=24;
+  goldHdr(wl.getRow(2),['品項','五行','現有','安全庫存','建議補貨']);
+  let lr=3;state.items.forEach(it=>{const q=num(it.qty)??0,s=num(it.safe)??gp(PKEYS.safe);if(q<=s){wl.getRow(lr++).values=[it.name,it.element,q,s,Math.max(0,s-q)];}});
+
+  // ── 參數設定 ──
+  const wp=wb.addWorksheet('參數設定');wp.columns=[16,8,6,34].map(w=>({width:w}));
+  wp.getCell('A1').value='⚙ 參數設定';wp.getCell('A1').font={bold:true,color:{argb:GILT}};
+  goldHdr(wp.getRow(3),['參數','數值','單位','說明']);
+  [['蝦皮加價倍率',gp(PKEYS.markup),'','蝦皮定價公式中的加價倍率'],
+   ['蝦皮抽成%',gp(PKEYS.comm),'','蝦皮抽成比例，定價公式會自動反算'],
+   ['蝦皮運費',gp(PKEYS.ship),'元',''],
+   ['固定成本',gp(PKEYS.fix),'元','包裝/耗材等固定成本'],
+   ['利潤封頂',gp(PKEYS.cap),'元','建議售價上限=(進價+此值)÷(1-抽成%)'],
+   ['安全庫存(預設)',gp(PKEYS.safe),'件','低於→補貨提醒']].forEach((r,i)=>{wp.getRow(4+i).values=r;});
+
+  // ── 五行對照表 ──
+  const wm=wb.addWorksheet('五行對照表');wm.columns=[16,8,10,8,18,12,14].map(w=>({width:w}));
+  wm.mergeCells('A1:G1');wm.getCell('A1').value='✦ 水晶五行 × 功效 × 命格對照表 ✦';wm.getCell('A1').font={bold:true,color:{argb:GILT}};wm.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};wm.getRow(1).height=24;
+  goldHdr(wm.getRow(2),['水晶名稱','五行','分類','型態','功效','適合命格','備註']);
+  let mr=3;state.lookup.forEach(c=>{wm.getRow(mr++).values=[c.name,c.element,c.category,c.form,c.efficacy,c.fit,c.note];});
+  return wb;
+}
+async function exportXlsx(){
+  if(typeof ExcelJS==='undefined'){toast('Excel 模組未載入，請連網後重試，或用 CSV');return;}
+  try{
+    const buf=await buildWorkbook().xlsx.writeBuffer();
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_庫存_'+dateStamp()+'.xlsx';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1500);toast('已匯出 xlsx（鎏金樣式）');
+  }catch(e){toast('匯出失敗：'+e.message);}
+}
+function exportCsv(){
+  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','功效','安全庫存','補貨','蝦皮連結'];
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=[hdr.map(q).join(',')];
+  state.items.forEach(it=>{
+    const st=stockStatus(it.qty,num(it.safe)??p('safe'));
+    rows.push([it.name,it.element,it.bead,it.wrist,it.ring,it.chain,it.cost,it.qty,it.date,
+      shopeePrice(it.cost),suggestPrice(it.cost),it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
+  });
+  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_庫存_'+dateStamp()+'.csv';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('已匯出 CSV');
+}
+async function importXlsx(file){
+  if(typeof ExcelJS==='undefined'){toast('Excel 模組未載入，請連網後重試');return;}
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=new ExcelJS.Workbook();await wb.xlsx.load(buf);
+    const fmtDate=v=>{if(!v)return null;if(v instanceof Date)return v.toISOString().slice(0,10);const m=String(v).match(/\d{4}-\d{2}-\d{2}/);return m?m[0]:String(v).slice(0,10);};
+    const cellVal=c=>{if(c==null)return '';if(typeof c==='object'){if(c.result!==undefined)return c.result;if(c.text!==undefined)return c.text;if(c.hyperlink!==undefined)return c.hyperlink;if(c.richText)return c.richText.map(t=>t.text).join('');}return c;};
+    const headerRow=(ws,key)=>{let hr=0;ws.eachRow((row,rn)=>{if(hr)return;row.eachCell({includeEmpty:false},c=>{if(String(cellVal(c.value)).trim()===key)hr=rn;});});return hr;};
+    const colMap=(ws,hr)=>{const m={};ws.getRow(hr).eachCell({includeEmpty:false},(c,cn)=>{m[String(cellVal(c.value)).trim()]=cn;});return m;};
+    const ni=v=>{v=String(cellVal(v)).trim();return v===''||isNaN(v)?null:Number(v);};
+    const sv=v=>{const s=String(cellVal(v)).trim();return s===''?null:s;};
+
+    const ws=wb.getWorksheet('進銷總表');
+    if(!ws){toast('找不到「進銷總表」工作表');return;}
+    const hr=headerRow(ws,'品項名稱');if(!hr){toast('進銷總表缺少欄位標題');return;}
+    const col=colMap(ws,hr);const g=(row,k)=>{const i=col[k];return i==null?null:row.getCell(i).value;};
+    const items=[];
+    for(let r=hr+1;r<=ws.rowCount;r++){const row=ws.getRow(r);const nm=String(cellVal(g(row,'品項名稱'))).trim();if(!nm)continue;
+      items.push({_id:uid(),name:nm,element:sv(g(row,'五行')),bead:ni(g(row,'珠徑')),wrist:ni(g(row,'手圍')),ring:ni(g(row,'戒圍')),chain:ni(g(row,'鍊長')),
+        cost:ni(g(row,'進價')),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
+    if(!items.length){toast('進銷總表沒有讀到品項');return;}
+    state.items=items;
+
+    const wm=wb.getWorksheet('五行對照表');
+    if(wm){const mh=headerRow(wm,'水晶名稱');if(mh){const mc=colMap(wm,mh);const mg=(row,k)=>{const i=mc[k];return i==null?'':String(cellVal(row.getCell(i).value)).trim();};const lk=[];
+      for(let r=mh+1;r<=wm.rowCount;r++){const row=wm.getRow(r);const nm=mg(row,'水晶名稱');if(!nm)continue;lk.push({name:nm,element:mg(row,'五行'),category:mg(row,'分類'),form:mg(row,'型態'),efficacy:mg(row,'功效'),fit:mg(row,'適合命格'),note:mg(row,'備註')});}
+      if(lk.length)state.lookup=lk;}}
+
+    const wp=wb.getWorksheet('參數設定');
+    if(wp){const ph=headerRow(wp,'參數');if(ph){for(let r=ph+1;r<=wp.rowCount;r++){const row=wp.getRow(r);const k=String(cellVal(row.getCell(1).value)).trim();const v=cellVal(row.getCell(2).value);if(k&&v!==''&&!isNaN(v))state.params[k]=Number(v);}}}
+
+    save();render();toast('已匯入 '+items.length+' 筆品項');
+  }catch(err){toast('匯入失敗：'+err.message);}
+}
+
+/* ───────── lookup (五行對照表) manager ───────── */
+function openLookup(){closeData();$('lkQ').value='';renderLookup();$('lkBackdrop').classList.add('show');}
+function closeLookup(){$('lkBackdrop').classList.remove('show');}
+function renderLookup(){
+  const q=$('lkQ').value.trim().toLowerCase();
+  const arr=state.lookup.filter(c=>!q||[c.name,c.element,c.efficacy,c.fit,c.category,c.form].some(v=>String(v||'').toLowerCase().includes(q)));
+  arr.sort(elemThenName);
+  $('lkList').innerHTML=arr.length?arr.map(c=>{const col=elemColor(c.element);
+    return `<div class="lkrow" data-name="${esc(c.name)}"><span class="lkbar" style="background:${col}"></span>
+      <div class="lkbody"><div class="lknm">${esc(c.name)} <span class="badge" style="color:${col};border-color:${col}66">${esc(c.element||'—')}</span></div>
+      <div class="lksub">${[c.form,c.efficacy,c.fit].filter(Boolean).map(esc).join(' · ')||'—'}</div></div></div>`;}).join('')
+    :`<div class="empty" style="padding:34px"><b>${state.lookup.length?'找不到符合的':'對照表是空的'}</b>${state.lookup.length?'換個關鍵字':'點上方新增'}</div>`;
+}
+function openLkEdit(name){
+  const c=name?state.lookup.find(x=>String(x.name).trim()===name):null;
+  state.lkEditId=c?String(c.name).trim():null;
+  $('lkeTitle').textContent=c?'編輯對照':'新增對照';
+  $('lkeDel').style.display=c?'block':'none';
+  $('lke_name').value=c?c.name:''; $('lke_elem').value=c?(c.element||''):'';
+  $('lke_form').value=c?(c.form||''):''; $('lke_cat').value=c?(c.category||''):'';
+  $('lke_fit').value=c?(c.fit||''):''; $('lke_eff').value=c?(c.efficacy||''):'';
+  $('lke_note').value=c?(c.note||''):'';
+  $('lkeBackdrop').classList.add('show');
+}
+function saveLkEdit(){
+  const nm=$('lke_name').value.trim();if(!nm){toast('請輸入水晶名稱');$('lke_name').focus();return;}
+  const obj={name:nm,element:$('lke_elem').value.trim(),category:$('lke_cat').value.trim(),form:$('lke_form').value.trim(),
+    efficacy:$('lke_eff').value.trim(),fit:$('lke_fit').value.trim(),note:$('lke_note').value.trim()};
+  const key=state.lkEditId||nm;
+  const i=state.lookup.findIndex(x=>String(x.name).trim()===key);
+  if(i>=0)state.lookup[i]=obj; else state.lookup.push(obj);
+  save();$('lkeBackdrop').classList.remove('show');renderLookup();refreshDatalist();render();toast('對照已儲存');
+}
+function delLkEdit(){
+  if(!state.lkEditId)return;
+  if(!confirm('刪除對照「'+state.lkEditId+'」？'))return;
+  state.lookup=state.lookup.filter(x=>String(x.name).trim()!==state.lkEditId);
+  save();$('lkeBackdrop').classList.remove('show');renderLookup();refreshDatalist();toast('已刪除對照');
+}
+
+/* ───────── events ───────── */
+$('addBtn').onclick=()=>openSheet(null);
+$('cancelBtn').onclick=closeSheet;
+$('saveBtn').onclick=saveItem;
+$('delBtn').onclick=delItem;
+$('backdrop').onclick=e=>{if(e.target===$('backdrop'))closeSheet();};
+$('list').onclick=e=>{
+  const actBtn=e.target.closest('[data-act]');
+  if(actBtn){const id=actBtn.dataset.id,act=actBtn.dataset.act;
+    if(act==='edit'){const it=state.items.find(x=>x._id===id);if(it)openSheet(it);}
+    else if(act==='del')quickDelete(id);
+    else if(act==='inc')adjustQty(id,1);
+    else if(act==='dec')adjustQty(id,-1);
+    return;}
+  if(e.target.closest('a'))return;
+  const c=e.target.closest('.card');
+  if(c){state.expandedId=state.expandedId===c.dataset.id?null:c.dataset.id;render();}
+};
+$('q').oninput=render;
+$('sort').onchange=()=>{state.sort=$('sort').value;savePrefs();render();};
+$('lifeFilter').onchange=()=>{state.life=$('lifeFilter').value;savePrefs();render();};
+$('groupBtn').onclick=()=>{state.group=!state.group;$('groupBtn').classList.toggle('on',state.group);savePrefs();render();};
+$('elemChips').onclick=e=>{const b=e.target.closest('[data-elem],[data-clear]');if(!b)return;
+  if(b.dataset.clear){state.elems.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';}
+  else{const k=b.dataset.elem;state.elems.has(k)?state.elems.delete(k):state.elems.add(k);}
+  savePrefs();render();};
+$('stItemsBox').onclick=()=>{state.elems.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';savePrefs();render();};
+$('stNeedBox').onclick=()=>{state.lowOnly=!state.lowOnly;savePrefs();render();};
+$('statsToggle').onclick=()=>{state.statsOpen=!state.statsOpen;savePrefs();renderStatsDetail();};
+$('f_name').oninput=()=>{autofillFromName($('f_name').value,false);};
+$('f_name').onchange=()=>{autofillFromName($('f_name').value,true);};
+$('f_cost').oninput=updatePreview;$('f_qty').oninput=updatePreview;$('f_safe').oninput=updatePreview;
+$('moreDims').onclick=()=>{state.showAllDims=true;applyFormFields(findCrystal($('f_name').value)?.form||null);};
+$('gearBtn').onclick=openParams;
+$('pCancel').onclick=()=>$('pBackdrop').classList.remove('show');
+$('pSave').onclick=saveParams;
+$('pBackdrop').onclick=e=>{if(e.target===$('pBackdrop'))$('pBackdrop').classList.remove('show');};
+$('xlsxBtn').onclick=exportXlsx;$('csvBtn').onclick=exportCsv;
+$('impBtn').onclick=()=>$('fileIn').click();
+$('fileIn').onchange=e=>{if(e.target.files[0]){importXlsx(e.target.files[0]);e.target.value='';}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();$('pBackdrop').classList.remove('show');closeData();closeLookup();$('lkeBackdrop').classList.remove('show');}});
+$('dataBtn').onclick=openData;
+$('dataClose').onclick=closeData;
+$('dataBackdrop').onclick=e=>{if(e.target===$('dataBackdrop'))closeData();};
+$('bkBtn').onclick=backupJson;
+$('rsBtn').onclick=()=>$('jsonIn').click();
+$('jsonIn').onchange=e=>{if(e.target.files[0]){restoreJson(e.target.files[0]);e.target.value='';}};
+$('lkOpenBtn').onclick=openLookup;
+$('lkClose').onclick=closeLookup;
+$('lkBackdrop').onclick=e=>{if(e.target===$('lkBackdrop'))closeLookup();};
+$('lkQ').oninput=renderLookup;
+$('lkAdd').onclick=()=>openLkEdit(null);
+$('lkList').onclick=e=>{const r=e.target.closest('.lkrow');if(r)openLkEdit(r.dataset.name);};
+$('lkeCancel').onclick=()=>$('lkeBackdrop').classList.remove('show');
+$('lkeSave').onclick=saveLkEdit;
+$('lkeDel').onclick=delLkEdit;
+$('lkeBackdrop').onclick=e=>{if(e.target===$('lkeBackdrop'))$('lkeBackdrop').classList.remove('show');};
+
+/* ───────── init ───────── */
+loadPrefs();
+$('sort').value=state.sort;
+$('lifeFilter').value=state.life;
+$('groupBtn').classList.toggle('on',state.group);
+load();render();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
