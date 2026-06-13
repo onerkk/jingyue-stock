@@ -246,6 +246,27 @@
   .topsell{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 2px;border-bottom:1px solid var(--line2)}
   .topsell .tn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .topsell .tv{font-variant-numeric:tabular-nums;color:var(--muted)}
+  /* ── analytics: chart + health ── */
+  .chartbox{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:12px 10px 4px;margin-bottom:6px}
+  .hrow{display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid var(--line2);font-size:13px}
+  .hn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--txt)}
+  .hsub{color:var(--muted);font-size:11.5px;white-space:nowrap}
+  .hcap{font-variant-numeric:tabular-nums;color:var(--goldtxt);white-space:nowrap}
+  .hsummary{background:rgba(201,162,39,.06);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin:2px 0 10px;font-size:13px;color:var(--goldtxt);line-height:1.5}
+  /* ── printable report ── */
+  #printArea{display:none}
+  @media print{
+    body{background:#fff}
+    body *{visibility:hidden}
+    #printArea,#printArea *{visibility:visible}
+    #printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;color:#000;background:#fff;font-family:system-ui,sans-serif}
+    #printArea h1{font-size:20px;margin:0 0 2px}
+    #printArea h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc;padding-bottom:3px}
+    #printArea .pmeta{color:#666;font-size:11px;margin:0 0 14px}
+    #printArea table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+    #printArea td{padding:4px 6px;border-bottom:1px solid #eee}
+    #printArea td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  }
 </style>
 </head>
 <body>
@@ -437,6 +458,8 @@
         <button class="btn gold" id="bkBtn" type="button">⤓ 備份到檔案</button>
         <button class="btn ghost" id="rsBtn" type="button">⤒ 從備份檔還原</button>
         <button class="btn ghost" id="statsBtn" type="button">🧾 銷售統計</button>
+        <button class="btn ghost" id="healthBtn" type="button">📦 庫存健康</button>
+        <button class="btn ghost" id="printBtn" type="button">🖨 列印 / 存 PDF 月報</button>
         <button class="btn ghost" id="lkOpenBtn" type="button">📖 編輯五行對照表</button>
         <button class="btn ghost" id="shopeeBtn" type="button">🛒 蝦皮上架 CSV</button>
         <button class="btn ghost" id="dataClose" type="button">關閉</button>
@@ -532,6 +555,19 @@
       <div class="btns" style="margin-top:14px"><button class="btn ghost" id="statClose" type="button">關閉</button></div>
     </div>
   </div>
+
+  <!-- Inventory health sheet -->
+  <div class="backdrop" id="healthBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2>庫存健康</h2>
+      <div class="sub">壓貨、低毛利、待補貨一次看。滯銷天數依「最後一次賣出」計算。</div>
+      <div id="healthBody"></div>
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" id="healthClose" type="button">關閉</button></div>
+    </div>
+  </div>
+
+  <div id="printArea"></div>
 
   <div class="toast" id="toast"></div>
 
@@ -1004,6 +1040,19 @@ function renderHistory(){const it=state.items.find(x=>x._id===state.hisItemId);i
   }).join(''):`<div class="empty" style="padding:30px"><b>還沒有交易</b>用「賣 1 / 進 1」或「交易…」開始記錄</div>`;}
 function periodStart(p){const d=new Date();d.setHours(0,0,0,0);if(p==='week'){const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow);}else if(p==='month'){d.setDate(1);}else return null;return d;}
 function openStats(){closeData();renderSalesStats();$('statBackdrop').classList.add('show');}
+function monthlyTrend(n){n=n||6;const now=new Date();const months=[];
+  for(let i=n-1;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:(d.getMonth()+1)+'月',rev:0,profit:0});}
+  const idx={};months.forEach(m=>idx[m.key]=m);
+  state.tx.forEach(t=>{if(t.type!=='sale')return;const m=idx[String(t.date).slice(0,7)];if(!m)return;const r=t.qty*(num(t.price)??0);m.rev+=r;m.profit+=r-t.qty*(num(t.costAtSale)??0);});
+  return months;}
+function trendChartSVG(months){const W=320,H=140,padB=22,padT=10;const max=Math.max(1,...months.map(m=>Math.max(m.rev,m.profit)));
+  const n=months.length,gw=W/n,bw=gw*0.3;let s='';
+  months.forEach((m,i)=>{const x=i*gw+gw/2;
+    const rh=(m.rev/max)*(H-padB-padT),ph=(Math.max(0,m.profit)/max)*(H-padB-padT);
+    s+=`<rect x="${(x-bw-1).toFixed(1)}" y="${(H-padB-rh).toFixed(1)}" width="${bw.toFixed(1)}" height="${rh.toFixed(1)}" rx="2" fill="#c9a227"></rect>`;
+    s+=`<rect x="${(x+1).toFixed(1)}" y="${(H-padB-ph).toFixed(1)}" width="${bw.toFixed(1)}" height="${ph.toFixed(1)}" rx="2" fill="#5fb87a"></rect>`;
+    s+=`<text x="${x.toFixed(1)}" y="${H-7}" fill="#8a8f9e" font-size="10" text-anchor="middle">${m.label}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" style="display:block">${s}</svg>`;}
 function renderSalesStats(){
   document.querySelectorAll('#statPeriod .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.period===state.statPeriod));
   const start=periodStart(state.statPeriod);
@@ -1015,11 +1064,56 @@ function renderSalesStats(){
   const profit=rev-cogs,margin=rev>0?Math.round(profit/rev*100):0;
   const top=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const elemRows=Object.entries(byElem).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="topsell"><span class="tn" style="color:${elemColor(k)}">${k}</span><span class="tv">${fmt(v)}</span></div>`).join('');
+  const tr=monthlyTrend(6),hasTrend=tr.some(m=>m.rev>0);
   $('statBody').innerHTML=`
     <div class="stat-big"><div><span>銷售件數</span><b>${qty}</b></div><div><span>銷售額</span><b>${fmt(rev)}</b></div></div>
     <div class="stat-big"><div><span>毛利</span><b style="color:var(--ok)">${fmt(profit)}</b></div><div><span>毛利率</span><b>${margin}%</b></div></div>
+    ${hasTrend?`<div class="stat-sec">近 6 個月趨勢 <span style="float:right;font-weight:400"><span style="color:#c9a227">■</span> 營收　<span style="color:#5fb87a">■</span> 毛利</span></div><div class="chartbox">${trendChartSVG(tr)}</div>`:''}
     ${top.length?`<div class="stat-sec">熱賣品項</div>${top.map(([n,v])=>`<div class="topsell"><span class="tn">${esc(n)}</span><span class="tv">${v} 件</span></div>`).join('')}`:'<div class="empty" style="padding:26px"><b>這段期間沒有銷售</b>用卡片的「賣 1」開始記錄</div>'}
     ${elemRows?`<div class="stat-sec">各五行銷售額</div>${elemRows}`:''}`;}
+
+/* ───────── inventory health ───────── */
+function lastSaleDate(id){let d=null;state.tx.forEach(t=>{if(t.itemId===id&&t.type==='sale'){if(!d||String(t.date)>d)d=String(t.date);}});return d;}
+function daysSince(s){if(!s)return null;return Math.floor((Date.now()-new Date(s).getTime())/86400000);}
+function openHealth(){closeData();renderHealth();$('healthBackdrop').classList.add('show');}
+function renderHealth(){
+  const inStock=state.items.filter(it=>(num(it.qty)??0)>0);
+  const dead=inStock.map(it=>{const ls=lastSaleDate(it._id);return{it,d:ls?daysSince(ls):null,cap:(effectiveCost(it)??0)*(num(it.qty)??0)};})
+    .filter(x=>x.d===null||x.d>=30)
+    .sort((a,b)=>{if(a.d===null&&b.d===null)return b.cap-a.cap;if(a.d===null)return -1;if(b.d===null)return 1;return b.d-a.d;});
+  const deadCap=dead.reduce((s,x)=>s+x.cap,0);
+  const lowM=state.items.map(it=>{const sp=itemSuggest(it),ec=effectiveCost(it);const m=(sp&&sp>0&&ec!=null)?Math.round((sp-ec)/sp*100):null;return{it,sp,ec,m};})
+    .filter(x=>x.m!=null&&x.m<25).sort((a,b)=>a.m-b.m);
+  const restock=state.items.map(it=>{const q=num(it.qty)??0,safe=num(it.safe)??p('safe'),st=stockStatus(q,safe);const need=Math.max((safe||0)+3-q,1);return{it,q,safe,st,ec:effectiveCost(it)??0,need};})
+    .filter(x=>x.st&&x.st.c!=='ok').sort((a,b)=>a.q-b.q);
+  const restockCost=restock.reduce((s,x)=>s+x.need*x.ec,0);
+  const sec=(title,extra,rows,empty)=>`<div class="stat-sec">${title}${extra?`<span style="float:right;font-weight:400;color:var(--muted)">${extra}</span>`:''}</div>${rows||`<div class="empty" style="padding:20px"><b>${empty}</b></div>`}`;
+  const deadRows=dead.slice(0,30).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">${x.d===null?'從未售出':x.d+' 天沒賣'} · 庫存 ${num(x.it.qty)??0}</span><span class="hcap">壓 ${fmt(x.cap)}</span></div>`).join('');
+  const lowRows=lowM.slice(0,30).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">成本 ${fmt(x.ec)} → 售 ${fmt(x.sp)}</span><span class="hcap" style="color:var(--out)">${x.m}%</span></div>`).join('');
+  const reRows=restock.slice(0,40).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">${x.st.t} · 現 ${x.q}/安全 ${x.safe}</span><span class="hcap">補≈${fmt(x.need*x.ec)}</span></div>`).join('');
+  $('healthBody').innerHTML=`
+    <div class="hsummary">滯銷壓貨 <b>${fmt(deadCap)}</b>（${dead.length} 項）　·　待補貨預估 <b>${fmt(restockCost)}</b>（${restock.length} 項）</div>
+    ${sec('滯銷品 <span style="color:var(--muted);font-weight:400">30天+未售</span>','按最久排序',deadRows,'沒有滯銷品，週轉良好')}
+    ${sec('低毛利 <span style="color:var(--muted);font-weight:400">毛利率<25%</span>','',lowRows,'沒有低毛利品項')}
+    ${sec('補貨建議','補到安全庫存+3',reRows,'庫存都充足，無需補貨')}`;}
+
+/* ───────── printable monthly report ───────── */
+function printReport(){
+  const now=new Date(),mk=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const sales=state.tx.filter(t=>t.type==='sale'&&new Date(t.date)>=start);
+  let qty=0,rev=0,cogs=0;const byItem={};
+  sales.forEach(t=>{qty+=t.qty;rev+=t.qty*(num(t.price)??0);cogs+=t.qty*(num(t.costAtSale)??0);
+    const it=state.items.find(x=>x._id===t.itemId);const nm=it?it.name:'(已刪除)';byItem[nm]=byItem[nm]||{q:0,r:0};byItem[nm].q+=t.qty;byItem[nm].r+=t.qty*(num(t.price)??0);});
+  let invCost=0,need=0;const lowList=[];
+  state.items.forEach(it=>{invCost+=(effectiveCost(it)??0)*(num(it.qty)??0);const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(st&&st.c!=='ok'){need++;lowList.push(esc(it.name)+'（'+(num(it.qty)??0)+'）');}});
+  const top=Object.entries(byItem).sort((a,b)=>b[1].r-a[1].r).slice(0,10);
+  $('printArea').innerHTML=`<h1>靜月之光 · 月報 ${mk}</h1><p class="pmeta">產出時間 ${now.toLocaleString('zh-TW')}</p>
+    <table><tr><td>本月銷售件數</td><td>${qty}</td></tr><tr><td>本月銷售額</td><td>${fmt(rev)}</td></tr><tr><td>本月毛利</td><td>${fmt(rev-cogs)}</td></tr><tr><td>毛利率</td><td>${rev>0?Math.round((rev-cogs)/rev*100):0}%</td></tr><tr><td>目前庫存成本</td><td>${fmt(invCost)}</td></tr><tr><td>待補貨品項</td><td>${need}</td></tr></table>
+    <h2>熱賣品項（前 10）</h2>${top.length?'<table>'+top.map(([n,o])=>`<tr><td>${esc(n)}</td><td>${o.q} 件 · ${fmt(o.r)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
+    <h2>待補貨清單</h2>${lowList.length?'<p>'+lowList.join('、')+'</p>':'<p>無</p>'}`;
+  window.print();
+}
 
 /* ───────── params ───────── */
 function openParams(){
@@ -1324,7 +1418,7 @@ $('pBackdrop').onclick=e=>{if(e.target===$('pBackdrop'))$('pBackdrop').classList
 $('xlsxBtn').onclick=exportXlsx;$('csvBtn').onclick=exportCsv;
 $('impBtn').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=e=>{if(e.target.files[0]){importXlsx(e.target.files[0]);e.target.value='';}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();['pBackdrop','txBackdrop','hisBackdrop','statBackdrop','lkeBackdrop'].forEach(x=>$(x).classList.remove('show'));closeData();closeLookup();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();['pBackdrop','txBackdrop','hisBackdrop','statBackdrop','healthBackdrop','lkeBackdrop'].forEach(x=>$(x).classList.remove('show'));closeData();closeLookup();}});
 $('dataBtn').onclick=openData;
 $('dataClose').onclick=closeData;
 $('dataBackdrop').onclick=e=>{if(e.target===$('dataBackdrop'))closeData();};
@@ -1333,6 +1427,10 @@ $('rsBtn').onclick=()=>$('jsonIn').click();
 $('jsonIn').onchange=e=>{if(e.target.files[0]){restoreJson(e.target.files[0]);e.target.value='';}};
 $('shopeeBtn').onclick=exportShopee;
 $('statsBtn').onclick=openStats;
+$('healthBtn').onclick=openHealth;
+$('printBtn').onclick=printReport;
+$('healthClose').onclick=()=>$('healthBackdrop').classList.remove('show');
+$('healthBackdrop').onclick=e=>{if(e.target===$('healthBackdrop'))$('healthBackdrop').classList.remove('show');};
 $('statClose').onclick=()=>$('statBackdrop').classList.remove('show');
 $('statBackdrop').onclick=e=>{if(e.target===$('statBackdrop'))$('statBackdrop').classList.remove('show');};
 $('statPeriod').onclick=e=>{const b=e.target.closest('[data-period]');if(!b)return;state.statPeriod=b.dataset.period;renderSalesStats();};
