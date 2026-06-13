@@ -206,6 +206,46 @@
   .lkbody{flex:1;min-width:0;padding-left:4px}
   .lknm{font-size:14.5px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
   .lksub{font-size:12px;color:var(--muted);margin-top:3px}
+  /* ── low-stock banner ── */
+  .lowbanner{margin:0 14px 4px;background:rgba(224,100,79,.12);border:1px solid rgba(224,100,79,.35);
+    border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--out);cursor:pointer}
+  .lowbanner .x{margin-left:auto;border:0;background:none;color:var(--out);font-size:18px;cursor:pointer;padding:0 4px;opacity:.7}
+  /* ── tag chips (distinct from element chips) ── */
+  #tagChips .chip-f.on{border-color:var(--gilt);color:var(--gilt)}
+  #tagChips:empty{display:none}
+  .chip-f.tag::before{content:"#";opacity:.55;margin-right:1px}
+  /* ── photo ── */
+  .photobox{border:1px dashed var(--line2);border-radius:12px;min-height:120px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(255,255,255,.02)}
+  .photobox img{width:100%;max-height:240px;object-fit:contain;display:block}
+  .photo-empty{color:var(--muted2);font-size:13px}
+  .card .thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 auto;background:rgba(255,255,255,.04);border:1px solid var(--line2)}
+  .cardexp .exp-photo{width:100%;max-height:220px;object-fit:contain;border-radius:10px;margin-bottom:10px;background:rgba(255,255,255,.03)}
+  /* ── segmented control ── */
+  .seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line2);border-radius:11px;padding:3px;margin-bottom:13px}
+  .seg-b{flex:1;border:0;background:none;color:var(--muted);font-size:14px;padding:9px;border-radius:8px;cursor:pointer;font-weight:500}
+  .seg-b.on{background:rgba(201,162,39,.16);color:var(--gilt)}
+  .txprev{background:rgba(201,162,39,.06);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin:2px 0 14px;font-size:13.5px;color:var(--goldtxt);min-height:20px}
+  /* ── tag pills on card ── */
+  .tagrow{margin-top:5px;display:flex;flex-wrap:wrap;gap:5px}
+  .tpill{font-size:10.5px;color:var(--goldtxt);background:rgba(201,162,39,.10);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+  /* ── history rows ── */
+  .hisrow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;margin-bottom:7px;font-size:13px}
+  .hisrow .ht{font-weight:600;padding:2px 8px;border-radius:6px;font-size:11.5px}
+  .hisrow .ht.sale{background:rgba(95,184,122,.14);color:var(--ok)}
+  .hisrow .ht.buy{background:rgba(74,144,217,.14);color:var(--shui)}
+  .hisrow .ht.adjust{background:rgba(255,255,255,.06);color:var(--muted)}
+  .hisrow .hd{color:var(--muted);font-size:12px}
+  .hisrow .hv{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .hisrow .hdel{border:0;background:none;color:var(--out);font-size:15px;cursor:pointer;opacity:.6;padding:0 2px}
+  /* ── stats body ── */
+  .stat-big{display:flex;gap:9px;margin-bottom:12px}
+  .stat-big>div{flex:1;background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:11px 8px;text-align:center}
+  .stat-big span{display:block;font-size:11px;color:var(--muted)}
+  .stat-big b{font-size:17px;color:var(--gilt);font-variant-numeric:tabular-nums}
+  .stat-sec{font-size:12px;letter-spacing:.1em;color:var(--goldtxt);margin:14px 0 8px}
+  .topsell{display:flex;align-items:center;gap:9px;font-size:13px;padding:6px 2px;border-bottom:1px solid var(--line2)}
+  .topsell .tn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topsell .tv{font-variant-numeric:tabular-nums;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -259,7 +299,9 @@
     <input type="file" id="fileIn" accept=".xlsx,.xls" style="display:none">
   </div>
 
+  <div class="lowbanner" id="lowBanner" style="display:none"></div>
   <div class="chips" id="elemChips"></div>
+  <div class="chips" id="tagChips"></div>
   <div class="memnote" id="memNote" style="display:none">⚠ 預覽模式無法存檔，部署到網站或手機後資料會自動保存</div>
   <div class="wrap"><div id="list"></div></div>
 
@@ -285,10 +327,14 @@
           <select id="f_elem"></select>
         </div>
         <div class="field">
-          <label>進價 <span class="hint">元</span></label>
+          <label id="costLabel">進價 <span class="hint">元</span></label>
           <input id="f_cost" type="number" inputmode="numeric" placeholder="0">
         </div>
       </div>
+      <label class="remember" id="wacWrap" style="margin:-4px 0 12px">
+        <input type="checkbox" id="f_costauto">
+        <span id="wacLabel">成本改用「進貨加權平均」自動算</span>
+      </label>
 
       <div id="dimGroup">
         <div class="field dim-field" data-field="bead"><label>珠徑 <span class="hint">mm</span></label><input id="f_bead" type="number" inputmode="decimal" placeholder="—"></div>
@@ -317,8 +363,24 @@
         <textarea id="f_eff" placeholder="例：桃花,人緣"></textarea>
       </div>
       <div class="field">
+        <label>分類標籤 <span class="hint">逗號分隔，可篩選</span></label>
+        <input id="f_tags" placeholder="天鐵,龍宮舍利,隕石…" autocomplete="off">
+      </div>
+      <div class="field">
         <label>蝦皮連結 <span class="hint">選填</span></label>
         <input id="f_link" type="url" placeholder="https://shopee.tw/…">
+      </div>
+      <div class="field">
+        <label>商品照片 <span class="hint">選填，自動壓縮</span></label>
+        <div class="photobox" id="photoBox">
+          <img id="photoPreview" alt="商品照片" style="display:none">
+          <div class="photo-empty" id="photoEmpty">尚無照片</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn ghost" id="photoPick" type="button" style="flex:1;padding:11px">選擇照片</button>
+          <button class="btn del" id="photoDel" type="button" style="flex:0 0 auto;padding:11px 14px;display:none">移除</button>
+        </div>
+        <input type="file" id="photoIn" accept="image/*" style="display:none">
       </div>
 
       <div class="preview">
@@ -374,7 +436,9 @@
       <div class="btns" style="flex-direction:column;gap:11px">
         <button class="btn gold" id="bkBtn" type="button">⤓ 備份到檔案</button>
         <button class="btn ghost" id="rsBtn" type="button">⤒ 從備份檔還原</button>
+        <button class="btn ghost" id="statsBtn" type="button">🧾 銷售統計</button>
         <button class="btn ghost" id="lkOpenBtn" type="button">📖 編輯五行對照表</button>
+        <button class="btn ghost" id="shopeeBtn" type="button">🛒 蝦皮上架 CSV</button>
         <button class="btn ghost" id="dataClose" type="button">關閉</button>
       </div>
     </div>
@@ -418,6 +482,57 @@
     </div>
   </div>
 
+  <!-- Transaction dialog -->
+  <div class="backdrop" id="txBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true" style="max-width:430px">
+      <div class="grab"></div>
+      <h2 id="txTitle">記一筆</h2>
+      <div class="sub" id="txItemName"></div>
+      <div class="seg" id="txTypeSeg">
+        <button class="seg-b on" data-tx="sale" type="button">賣出</button>
+        <button class="seg-b" data-tx="buy" type="button">進貨</button>
+      </div>
+      <div class="row2">
+        <div class="field"><label>數量 <span class="hint">件</span></label><input id="tx_qty" type="number" inputmode="numeric" value="1"></div>
+        <div class="field"><label id="txPriceLabel">單價 <span class="hint">元</span></label><input id="tx_price" type="number" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <div class="field"><label>日期</label><input id="tx_date" type="date"></div>
+      <div class="field"><label>備註 <span class="hint">選填</span></label><input id="tx_note" placeholder="買家 / 通路 / 備註"></div>
+      <div class="txprev" id="txPrev"></div>
+      <div class="btns">
+        <button class="btn ghost" id="txCancel" type="button">取消</button>
+        <button class="btn gold" id="txSave" type="button">記錄</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item history sheet -->
+  <div class="backdrop" id="hisBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2 id="hisTitle">交易明細</h2>
+      <div class="sub" id="hisSummary"></div>
+      <div id="hisList" class="lklist"></div>
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" id="hisClose" type="button">關閉</button></div>
+    </div>
+  </div>
+
+  <!-- Sales statistics sheet -->
+  <div class="backdrop" id="statBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2>銷售統計</h2>
+      <div class="sub">只統計「賣出」交易。毛利＝售出價 − 售出當下成本。</div>
+      <div class="seg" id="statPeriod">
+        <button class="seg-b on" data-period="month" type="button">本月</button>
+        <button class="seg-b" data-period="week" type="button">本週</button>
+        <button class="seg-b" data-period="all" type="button">全部</button>
+      </div>
+      <div id="statBody"></div>
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" id="statClose" type="button">關閉</button></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 <script>
@@ -427,8 +542,9 @@ const DATA = {"items":[{"name":"白水晶","element":"金","bead":9,"wrist":16,"
 const KEY='jingyue_inv_v6';
 const PREFS='jingyue_inv_prefs_v6';
 let memOnly=false;
-let state={items:[],lookup:[],params:{},showAllDims:false,editId:null,group:false,
-  life:'all',elems:new Set(),lowOnly:false,sort:'def',expandedId:null,statsOpen:false,lkEditId:null};
+let state={items:[],lookup:[],params:{},tx:[],showAllDims:false,editId:null,group:false,
+  life:'all',elems:new Set(),tags:new Set(),lowOnly:false,sort:'def',expandedId:null,statsOpen:false,lkEditId:null,
+  txItemId:null,txType:'sale',hisItemId:null,statPeriod:'month',lowDismissed:false,photoTmp:undefined};
 
 function loadPrefs(){try{const r=localStorage.getItem(PREFS);if(r){const o=JSON.parse(r);
   state.sort=o.sort||'def';state.group=!!o.group;state.life=o.life||'all';
@@ -440,21 +556,28 @@ const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費
 function p(k){return Number(state.params[PKEYS[k]])||0;}
 const uid=()=>'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 
+function normField(it){
+  if(!Array.isArray(it.tags))it.tags=it.tags?[String(it.tags)]:[];
+  if(it.costMode!=='auto')it.costMode='manual';
+  if(it.photoId===undefined)it.photoId=null;
+  return it;
+}
 function load(){
   let saved=null;
   try{const raw=localStorage.getItem(KEY); if(raw) saved=JSON.parse(raw);}catch(e){memOnly=true;}
-  if(saved){state.items=saved.items;state.lookup=saved.lookup;state.params=saved.params;}
+  if(saved){state.items=saved.items;state.lookup=saved.lookup;state.params=saved.params;state.tx=Array.isArray(saved.tx)?saved.tx:[];}
   else{
     state.params=JSON.parse(JSON.stringify(DATA.params));
     state.lookup=DATA.lookup.map(x=>({...x}));
     state.items=DATA.items.map(x=>({_id:uid(),...x}));
+    state.tx=[];
   }
-  state.items.forEach(it=>{if(!it._id)it._id=uid();});
+  state.items.forEach(it=>{if(!it._id)it._id=uid();normField(it);});
   try{localStorage.getItem(KEY);}catch(e){memOnly=true;}
   if(memOnly) document.getElementById('memNote').style.display='block';
 }
 function save(){
-  try{localStorage.setItem(KEY,JSON.stringify({items:state.items,lookup:state.lookup,params:state.params}));}
+  try{localStorage.setItem(KEY,JSON.stringify({items:state.items,lookup:state.lookup,params:state.params,tx:state.tx}));}
   catch(e){memOnly=true;document.getElementById('memNote').style.display='block';}
 }
 
@@ -463,6 +586,56 @@ function num(x){return (x===''||x==null||isNaN(x))?null:Number(x);}
 function shopeePrice(cost){const c=num(cost);if(c===null)return null;return Math.ceil((c*(1+p('markup'))+p('fix')+p('ship'))/(1-p('comm')));}
 function suggestPrice(cost){const c=num(cost);if(c===null)return null;const s=shopeePrice(c);const cap=Math.ceil((c+p('cap'))/(1-p('comm')));return Math.min(s,cap);}
 function stockStatus(qty,safe){const q=num(qty);if(q===null)return null;const s=num(safe)??0;if(q<=0)return{t:'缺貨',c:'out'};if(q<=s)return{t:'補貨',c:'low'};return{t:'充足',c:'ok'};}
+
+/* ── cost: manual or 進貨加權平均 (WAC from buy transactions) ── */
+function wac(itemId){
+  let q=0,amt=0;
+  state.tx.forEach(t=>{if(t.itemId===itemId&&t.type==='buy'){const tq=num(t.qty)??0,tp=num(t.price);if(tq>0&&tp!=null){q+=tq;amt+=tq*tp;}}});
+  return q>0?Math.round(amt/q):null;
+}
+function effectiveCost(it){if(it&&it.costMode==='auto'){const w=wac(it._id);if(w!=null)return w;}return num(it&&it.cost);}
+function itemShopee(it){return shopeePrice(effectiveCost(it));}
+function itemSuggest(it){return suggestPrice(effectiveCost(it));}
+
+/* ── photos via IndexedDB (graceful if unavailable) ── */
+let _db=null;
+function photoDB(){return new Promise((res,rej)=>{if(_db)return res(_db);if(!('indexedDB' in window))return rej('no-idb');
+  const r=indexedDB.open('jingyue-inv-db',1);
+  r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('photos'))r.result.createObjectStore('photos');};
+  r.onsuccess=()=>{_db=r.result;res(_db);};r.onerror=()=>rej(r.error);});}
+function putPhoto(id,blob){return photoDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').put(blob,id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);}));}
+function getPhoto(id){return photoDB().then(db=>new Promise((res,rej)=>{const r=db.transaction('photos','readonly').objectStore('photos').get(id);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error);}));}
+function delPhoto(id){return photoDB().then(db=>new Promise((res)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=res;})).catch(()=>{});}
+function compressImage(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);
+  img.onload=()=>{let{width:w,height:h}=img;const sc=Math.min(1,max/Math.max(w,h));w=Math.round(w*sc);h=Math.round(h*sc);
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+    cv.toBlob(b=>{URL.revokeObjectURL(url);b?res(b):rej('blob-fail');},'image/jpeg',0.72);};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej('img-fail');};img.src=url;});}
+const _purl={};
+function photoURL(id){return getPhoto(id).then(b=>{if(!b)return null;if(_purl[id])return _purl[id];const u=URL.createObjectURL(b);_purl[id]=u;return u;});}
+function loadVisiblePhotos(){document.querySelectorAll('img[data-photo]:not([data-done])').forEach(el=>{const id=el.dataset.photo;el.dataset.done='1';photoURL(id).then(u=>{if(u)el.src=u;else el.style.display='none';}).catch(()=>{el.style.display='none';});});}
+
+/* ── transactions ── */
+function recordTx(itemId,type,qty,price,date,note){
+  const it=state.items.find(x=>x._id===itemId);if(!it)return;
+  const q=num(qty);if(q===null||q<=0){toast('數量需大於 0');return;}
+  const t={id:uid(),itemId,type,qty:q,price:num(price),date:date||new Date().toISOString().slice(0,10),note:(note||'').trim()};
+  if(type==='sale')t.costAtSale=effectiveCost(it)??0;
+  state.tx.push(t);
+  if(type==='sale')it.qty=Math.max(0,(num(it.qty)??0)-q);
+  else if(type==='buy'){it.qty=(num(it.qty)??0)+q;if(it.costMode!=='auto'&&t.price!=null)it.cost=t.price;}
+  save();render();
+}
+function deleteTx(txId){
+  const t=state.tx.find(x=>x.id===txId);if(!t)return;
+  if(!confirm('刪除這筆交易？會把數量改回來'))return;
+  const it=state.items.find(x=>x._id===t.itemId);
+  if(it){if(t.type==='sale')it.qty=(num(it.qty)??0)+(num(t.qty)??0);else if(t.type==='buy')it.qty=Math.max(0,(num(it.qty)??0)-(num(t.qty)??0));}
+  state.tx=state.tx.filter(x=>x.id!==txId);
+  save();renderHistory();render();toast('已刪除交易');
+}
+function quickSell(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'sale',1,itemSuggest(it)??0);}
+function quickBuy(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'buy',1,effectiveCost(it)??0);}
 
 /* ───────── five-element colors / form fields ───────── */
 const ECOLOR={'金':'var(--jin)','木':'var(--mu)','水':'var(--shui)','火':'var(--huo)','土':'var(--tu)','多元':'var(--duo)'};
@@ -493,18 +666,22 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','
 
 function computeStats(){
   let cost=0,need=0;
-  state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,s=num(it.safe)??p('safe');cost+=c*q;if(q<=s)need++;});
+  state.items.forEach(it=>{const c=effectiveCost(it)??0,q=num(it.qty)??0,s=num(it.safe)??p('safe');cost+=c*q;if(q<=s)need++;});
   $('stItems').textContent=state.items.length;
   $('stNeed').textContent=need;
   $('stCost').textContent=fmt(cost);
   $('stNeedBox').classList.toggle('active',state.lowOnly);
+  const lb=$('lowBanner');
+  if(need>0 && !state.lowDismissed && !state.lowOnly){lb.style.display='flex';
+    lb.innerHTML=`🔴 有 ${need} 項需補貨，點此只看這些<button class="x" id="lowX" aria-label="關閉">✕</button>`;}
+  else lb.style.display='none';
 }
 function renderStatsDetail(){
   $('statsToggle').textContent='庫存明細 '+(state.statsOpen?'▴':'▾');
   if(!state.statsOpen){$('statsDetail').style.display='none';return;}
   $('statsDetail').style.display='block';
   let cost=0,retail=0;const byElem={};
-  state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,sale=suggestPrice(it.cost)??0;
+  state.items.forEach(it=>{const c=effectiveCost(it)??0,q=num(it.qty)??0,sale=itemSuggest(it)??0;
     cost+=c*q;retail+=sale*q;const k=primaryElem(it.element);byElem[k]=(byElem[k]||0)+1;});
   const order=['金','木','水','火','土','多元','其他'].filter(k=>byElem[k]);
   const max=Math.max(...order.map(k=>byElem[k]),1);
@@ -517,8 +694,13 @@ function renderChips(){
   const counts={};state.items.forEach(it=>{const k=primaryElem(it.element);counts[k]=(counts[k]||0)+1;});
   let html=order.filter(k=>counts[k]).map(k=>{const on=state.elems.has(k),col=elemColor(k);
     return `<button class="chip-f${on?' on':''}" data-elem="${k}" style="${on?`border-color:${col};color:${col}`:''}">${k} ${counts[k]}</button>`;}).join('');
-  if(state.elems.size||state.lowOnly||state.life!=='all')html+=`<button class="chip-f clear" data-clear="1">✕ 清除篩選</button>`;
+  if(state.elems.size||state.tags.size||state.lowOnly||state.life!=='all')html+=`<button class="chip-f clear" data-clear="1">✕ 清除篩選</button>`;
   $('elemChips').innerHTML=html;
+}
+function renderTagChips(){
+  const counts={};state.items.forEach(it=>(it.tags||[]).forEach(t=>{t=String(t).trim();if(t)counts[t]=(counts[t]||0)+1;}));
+  const tags=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b,'zh-Hant'));
+  $('tagChips').innerHTML=tags.map(t=>`<button class="chip-f tag${state.tags.has(t)?' on':''}" data-tag="${esc(t)}">${esc(t)} ${counts[t]}</button>`).join('');
 }
 
 function specHtml(it){
@@ -532,30 +714,37 @@ function specHtml(it){
 }
 function cardHtml(it){
   const col=elemColor(it.element);
-  const sale=suggestPrice(it.cost), shop=shopeePrice(it.cost);
+  const sale=itemSuggest(it), shop=itemShopee(it), ec=effectiveCost(it);
   const st=stockStatus(it.qty,num(it.safe)??p('safe'));
   const saleHtml=sale!=null?`<span class="pill sale">售 ${fmt(sale)}</span>`:'';
-  const costHtml=num(it.cost)!=null?`<span class="pill cost">進 ${fmt(it.cost)}</span>`:'';
+  const costHtml=ec!=null?`<span class="pill cost">進 ${fmt(ec)}${it.costMode==='auto'?' 均':''}</span>`:'';
   const stHtml=st?`<span class="st ${st.c}">${st.t}</span>`:'';
+  const tagsHtml=(it.tags&&it.tags.length)?`<div class="tagrow">${it.tags.map(t=>`<span class="tpill">${esc(t)}</span>`).join('')}</div>`:'';
+  const thumb=it.photoId?`<img class="thumb" data-photo="${esc(it.photoId)}" alt="">`:'';
   const open=state.expandedId===it._id;
   const exp=open?`<div class="cardexp">
+      ${it.photoId?`<img class="exp-photo" data-photo="${esc(it.photoId)}" alt="">`:''}
       <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
       <div class="exp-price">蝦皮定價 <b>${shop!=null?fmt(shop):'—'}</b> ｜ 建議售價 <b>${sale!=null?fmt(sale):'—'}</b></div>
       <div class="exp-actions">
-        <button class="xb minus" data-act="dec" data-id="${it._id}" aria-label="數量減一">－</button>
-        <span class="xqty">數量 ${num(it.qty)??0}</span>
-        <button class="xb plus" data-act="inc" data-id="${it._id}" aria-label="數量加一">＋</button>
+        <button class="xb minus" data-act="sell" data-id="${it._id}">賣 1</button>
+        <span class="xqty">庫存 ${num(it.qty)??0}</span>
+        <button class="xb plus" data-act="buy" data-id="${it._id}">進 1</button>
+        <button class="xb" data-act="tx" data-id="${it._id}">交易…</button>
+        <button class="xb" data-act="his" data-id="${it._id}">明細</button>
         ${it.link?`<a class="xb link" href="${esc(it.link)}" target="_blank" rel="noopener">開蝦皮</a>`:''}
         <button class="xb edit" data-act="edit" data-id="${it._id}">編輯</button>
         <button class="xb del" data-act="del" data-id="${it._id}">刪除</button>
       </div></div>`:'';
   return `<div class="card${open?' open':''}" data-id="${it._id}">
     <div class="bar" style="background:${col}"></div>
+    ${thumb}
     <div class="body">
       <div class="ttl"><span class="nm">${esc(it.name)}</span>
         <span class="badge" style="color:${col};border-color:${col}66">${esc(it.element||'—')}</span></div>
       <div class="specs">${specHtml(it)||'<span style="color:var(--muted2)">尚無規格</span>'}</div>
       <div class="priceline">${costHtml}${saleHtml}<span class="qty">×${num(it.qty)??0}</span>${stHtml}</div>
+      ${tagsHtml}
       ${exp}
     </div></div>`;
 }
@@ -568,18 +757,19 @@ function applySort(arr){
   if(s==='name')a.sort((x,y)=>String(x.name).localeCompare(y.name,'zh-Hant'));
   else if(s==='elem')a.sort(elemThenName);
   else if(s==='qty')a.sort((x,y)=>(num(x.qty)??0)-(num(y.qty)??0));
-  else if(s==='cost')a.sort((x,y)=>(num(y.cost)??0)-(num(x.cost)??0));
+  else if(s==='cost')a.sort((x,y)=>(effectiveCost(y)??0)-(effectiveCost(x)??0));
   else if(s==='date')a.sort((x,y)=>String(y.date||'').localeCompare(x.date||''));
   else if(s==='stock')a.sort((x,y)=>stOrd(x)-stOrd(y)||(num(x.qty)??0)-(num(y.qty)??0));
   return a;
 }
 function render(){
-  computeStats();renderStatsDetail();renderChips();
+  computeStats();renderStatsDetail();renderChips();renderTagChips();
   const q=$('q').value.trim().toLowerCase();
   let arr=state.items.filter(it=>{
-    if(q && ![it.name,it.element,it.efficacy].some(v=>String(v||'').toLowerCase().includes(q)))return false;
+    if(q && ![it.name,it.element,it.efficacy,(it.tags||[]).join(',')].some(v=>String(v||'').toLowerCase().includes(q)))return false;
     if(!fitMatches(it,state.life))return false;
     if(state.elems.size && !state.elems.has(primaryElem(it.element)))return false;
+    if(state.tags.size && !(it.tags||[]).some(t=>state.tags.has(String(t).trim())))return false;
     if(state.lowOnly){const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(!st||st.c==='ok')return false;}
     return true;
   });
@@ -599,6 +789,7 @@ function render(){
   }else{
     list.innerHTML=arr.map(cardHtml).join('');
   }
+  loadVisiblePhotos();
 }
 
 /* ───────── modal: open / autofill / preview / save ───────── */
@@ -678,21 +869,83 @@ function openSheet(item){
   $('backdrop').classList.add('show');
   if(!item)setTimeout(()=>$('f_name').focus(),120);
 }
+function applyCostMode(){
+  const auto=$('f_costauto').checked;
+  const it=state.editId?state.items.find(x=>x._id===state.editId):null;
+  if(auto){
+    const w=it?wac(it._id):null;
+    $('f_cost').readOnly=true;$('f_cost').style.opacity='.55';
+    if(w!=null)$('f_cost').value=w;
+    $('costLabel').innerHTML='進貨均價 <span class="hint">自動</span>';
+    $('wacLabel').textContent=w!=null?('目前加權平均 $'+w+'（依進貨交易自動算）'):'尚無進貨交易，會先沿用手動進價當底';
+  }else{
+    $('f_cost').readOnly=false;$('f_cost').style.opacity='1';
+    $('costLabel').innerHTML='進價 <span class="hint">元</span>';
+    $('wacLabel').textContent='成本改用「進貨加權平均」自動算';
+  }
+  updatePreview();
+}
+function handlePhotoFile(file){
+  if(!file)return;
+  compressImage(file,640).then(blob=>{
+    const pid=(typeof state.photoTmp==='string'&&state.photoTmp)?state.photoTmp:('p'+uid());
+    return putPhoto(pid,blob).then(()=>{state.photoTmp=pid;delete _purl[pid];
+      const u=URL.createObjectURL(blob);_purl[pid]=u;
+      $('photoPreview').src=u;$('photoPreview').style.display='block';$('photoEmpty').style.display='none';$('photoDel').style.display='block';});
+  }).catch(()=>toast('照片處理失敗，此瀏覽器可能不支援'));
+}
+function removePhoto(){state.photoTmp=null;$('photoPreview').style.display='none';$('photoPreview').removeAttribute('src');$('photoEmpty').style.display='block';$('photoDel').style.display='none';}
+function openSheet(item){
+  state.editId=item?item._id:null;
+  state.showAllDims=false;
+  $('sheetTitle').textContent=item?'編輯品項':'新增品項';
+  $('delBtn').style.display=item?'block':'none';
+  refreshDatalist();
+  const g=v=>v==null?'':v;
+  $('f_name').value=item?item.name:'';
+  fillElemOptions(item?item.element:'');
+  $('f_cost').value=g(item&&item.cost); $('f_qty').value=g(item&&item.qty);
+  $('f_bead').value=g(item&&item.bead); $('f_wrist').value=g(item&&item.wrist);
+  $('f_ring').value=g(item&&item.ring); $('f_chain').value=g(item&&item.chain);
+  $('f_safe').value=item?g(item.safe):'';
+  $('f_date').value=(item&&item.date)?String(item.date).slice(0,10):new Date().toISOString().slice(0,10);
+  $('f_eff').value=g(item&&item.efficacy); $('f_link').value=g(item&&item.link);
+  $('f_tags').value=item&&item.tags?item.tags.join(', '):'';
+  $('f_costauto').checked=item?item.costMode==='auto':false;
+  state.photoTmp=item?(item.photoId||null):null;
+  if(state.photoTmp){$('photoEmpty').style.display='none';$('photoDel').style.display='block';$('photoPreview').style.display='block';photoURL(state.photoTmp).then(u=>{if(u)$('photoPreview').src=u;});}
+  else{$('photoPreview').style.display='none';$('photoPreview').removeAttribute('src');$('photoEmpty').style.display='block';$('photoDel').style.display='none';}
+  if(item){showMatch(item.name);applyFormFields(findCrystal(item.name)?.form||null);state.showAllDims=true;applyFormFields(findCrystal(item.name)?.form||null);}
+  else{autofillFromName('');applyFormFields(null);}
+  applyCostMode();
+  updatePreview();
+  $('backdrop').classList.add('show');
+  if(!item)setTimeout(()=>$('f_name').focus(),120);
+}
 function closeSheet(){$('backdrop').classList.remove('show');}
 function collect(){
   const v=id=>$(id).value.trim();
   const n=v=>{const x=$(v).value.trim();return x===''?null:Number(x);};
+  const costMode=$('f_costauto').checked?'auto':'manual';
+  let cost;
+  if(costMode==='manual')cost=n('f_cost');
+  else{const it=state.editId?state.items.find(x=>x._id===state.editId):null;cost=it?num(it.cost):n('f_cost');}
+  const tags=v('f_tags').split(/[,，]/).map(s=>s.trim()).filter(Boolean);
   return{name:v('f_name'),element:$('f_elem').value||null,bead:n('f_bead'),wrist:n('f_wrist'),
-    ring:n('f_ring'),chain:n('f_chain'),cost:n('f_cost'),qty:n('f_qty'),
+    ring:n('f_ring'),chain:n('f_chain'),cost:cost,qty:n('f_qty'),
     safe:$('f_safe').value.trim()===''?null:Number($('f_safe').value),
-    date:$('f_date').value||null,efficacy:v('f_eff')||null,link:v('f_link')||null};
+    date:$('f_date').value||null,efficacy:v('f_eff')||null,link:v('f_link')||null,
+    tags:tags,costMode:costMode,photoId:state.photoTmp??null};
 }
 function saveItem(){
   const d=collect();
   if(!d.name){toast('請輸入品項名稱');$('f_name').focus();return;}
   if(state.editId){
     const it=state.items.find(x=>x._id===state.editId);
-    Object.assign(it,d);toast('已更新 '+d.name);
+    const oldPid=it.photoId;
+    Object.assign(it,d);
+    if(oldPid&&oldPid!==it.photoId){delPhoto(oldPid);delete _purl[oldPid];}
+    toast('已更新 '+d.name);
   }else{
     const ex=findExistingItem(d.name);
     if(ex){
@@ -715,9 +968,58 @@ function saveItem(){
 function delItem(){
   const it=state.items.find(x=>x._id===state.editId);if(!it)return;
   if(!confirm('刪除「'+it.name+'」？此動作無法復原')) return;
+  if(it.photoId){delPhoto(it.photoId);delete _purl[it.photoId];}
   state.items=state.items.filter(x=>x._id!==state.editId);
   save();render();closeSheet();toast('已刪除');
 }
+
+/* ───────── transaction dialog / history / sales stats ───────── */
+function openTx(itemId){const it=state.items.find(x=>x._id===itemId);if(!it)return;
+  state.txItemId=itemId;$('txItemName').textContent=it.name+'（庫存 '+(num(it.qty)??0)+'）';
+  $('tx_qty').value=1;$('tx_date').value=new Date().toISOString().slice(0,10);$('tx_note').value='';
+  setTxType('sale');$('txBackdrop').classList.add('show');}
+function setTxType(type){state.txType=type;
+  document.querySelectorAll('#txTypeSeg .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.tx===type));
+  const it=state.items.find(x=>x._id===state.txItemId);
+  if(type==='sale'){$('txTitle').textContent='記一筆 · 賣出';$('txPriceLabel').innerHTML='售出單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSuggest(it)??''):'';}
+  else{$('txTitle').textContent='記一筆 · 進貨';$('txPriceLabel').innerHTML='進貨單價 <span class="hint">元</span>';$('tx_price').value=it?(effectiveCost(it)??''):'';}
+  updateTxPrev();}
+function updateTxPrev(){const q=num($('tx_qty').value)??0,pr=num($('tx_price').value)??0;
+  const it=state.items.find(x=>x._id===state.txItemId);const cur=num(it&&it.qty)??0;
+  if(state.txType==='sale'){const c=it?(effectiveCost(it)??0):0;
+    $('txPrev').innerHTML=`銷售額 ${fmt(pr*q)} ｜ 成本 ${fmt(c*q)} ｜ 毛利 <b style="color:var(--ok)">${fmt((pr-c)*q)}</b>　→ 庫存 ${Math.max(0,cur-q)}`;}
+  else $('txPrev').innerHTML=`進貨金額 ${fmt(pr*q)}　→ 庫存 ${cur+q}`;}
+function saveTx(){recordTx(state.txItemId,state.txType,$('tx_qty').value,$('tx_price').value,$('tx_date').value,$('tx_note').value);
+  $('txBackdrop').classList.remove('show');toast(state.txType==='sale'?'已記錄賣出':'已記錄進貨');}
+function openHistory(itemId){state.hisItemId=itemId;renderHistory();$('hisBackdrop').classList.add('show');}
+function renderHistory(){const it=state.items.find(x=>x._id===state.hisItemId);if(!it)return;
+  $('hisTitle').textContent=it.name+' · 交易明細';
+  const txs=state.tx.filter(t=>t.itemId===state.hisItemId).sort((a,b)=>String(b.date).localeCompare(a.date)||(b.id>a.id?1:-1));
+  let sold=0,rev=0,cogs=0,bought=0,spent=0;
+  txs.forEach(t=>{if(t.type==='sale'){sold+=t.qty;rev+=t.qty*(num(t.price)??0);cogs+=t.qty*(num(t.costAtSale)??0);}else if(t.type==='buy'){bought+=t.qty;spent+=t.qty*(num(t.price)??0);}});
+  $('hisSummary').innerHTML=`賣出 ${sold} 件 · 營收 ${fmt(rev)} · 毛利 ${fmt(rev-cogs)}　｜　進貨 ${bought} 件 · ${fmt(spent)}`;
+  $('hisList').innerHTML=txs.length?txs.map(t=>{const label=t.type==='sale'?'賣出':t.type==='buy'?'進貨':'調整';
+    const val=t.type==='sale'?fmt((num(t.price)??0)*t.qty):(t.type==='buy'?'-'+fmt((num(t.price)??0)*t.qty):'');
+    return `<div class="hisrow"><span class="ht ${t.type}">${label}</span><span>${t.qty} 件</span><span class="hd">${esc(t.date)}${t.note?' · '+esc(t.note):''}</span><span class="hv">${val}</span><button class="hdel" data-tx="${t.id}" aria-label="刪除">✕</button></div>`;
+  }).join(''):`<div class="empty" style="padding:30px"><b>還沒有交易</b>用「賣 1 / 進 1」或「交易…」開始記錄</div>`;}
+function periodStart(p){const d=new Date();d.setHours(0,0,0,0);if(p==='week'){const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow);}else if(p==='month'){d.setDate(1);}else return null;return d;}
+function openStats(){closeData();renderSalesStats();$('statBackdrop').classList.add('show');}
+function renderSalesStats(){
+  document.querySelectorAll('#statPeriod .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.period===state.statPeriod));
+  const start=periodStart(state.statPeriod);
+  const sales=state.tx.filter(t=>t.type==='sale'&&(!start||new Date(t.date)>=start));
+  let qty=0,rev=0,cogs=0;const byElem={},byItem={};
+  sales.forEach(t=>{qty+=t.qty;rev+=t.qty*(num(t.price)??0);cogs+=t.qty*(num(t.costAtSale)??0);
+    const it=state.items.find(x=>x._id===t.itemId);const nm=it?it.name:'(已刪除品項)';
+    byItem[nm]=(byItem[nm]||0)+t.qty;const ek=it?primaryElem(it.element):'其他';byElem[ek]=(byElem[ek]||0)+t.qty*(num(t.price)??0);});
+  const profit=rev-cogs,margin=rev>0?Math.round(profit/rev*100):0;
+  const top=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const elemRows=Object.entries(byElem).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="topsell"><span class="tn" style="color:${elemColor(k)}">${k}</span><span class="tv">${fmt(v)}</span></div>`).join('');
+  $('statBody').innerHTML=`
+    <div class="stat-big"><div><span>銷售件數</span><b>${qty}</b></div><div><span>銷售額</span><b>${fmt(rev)}</b></div></div>
+    <div class="stat-big"><div><span>毛利</span><b style="color:var(--ok)">${fmt(profit)}</b></div><div><span>毛利率</span><b>${margin}%</b></div></div>
+    ${top.length?`<div class="stat-sec">熱賣品項</div>${top.map(([n,v])=>`<div class="topsell"><span class="tn">${esc(n)}</span><span class="tv">${v} 件</span></div>`).join('')}`:'<div class="empty" style="padding:26px"><b>這段期間沒有銷售</b>用卡片的「賣 1」開始記錄</div>'}
+    ${elemRows?`<div class="stat-sec">各五行銷售額</div>${elemRows}`:''}`;}
 
 /* ───────── params ───────── */
 function openParams(){
@@ -741,36 +1043,56 @@ function dateStamp(){const d=new Date();return d.getFullYear()+String(d.getMonth
 
 function openData(){$('dataBackdrop').classList.add('show');}
 function closeData(){$('dataBackdrop').classList.remove('show');}
-function backupJson(){
-  const payload={_meta:{app:'jingyue-inv',ver:'v6',exported:new Date().toISOString(),items:state.items.length},
-    items:state.items,lookup:state.lookup,params:state.params};
-  const blob=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
+function blobToDataURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(b);});}
+function dataURLtoBlob(d){const a=String(d).split(',');const mime=(a[0].match(/:(.*?);/)||[])[1]||'image/jpeg';const bin=atob(a[1]||'');const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime});}
+async function backupJson(){
+  const photos={};
+  for(const it of state.items){if(it.photoId){try{const b=await getPhoto(it.photoId);if(b)photos[it.photoId]=await blobToDataURL(b);}catch(e){}}}
+  const payload={_meta:{app:'jingyue-inv',ver:'v7',exported:new Date().toISOString(),items:state.items.length,tx:state.tx.length,photos:Object.keys(photos).length},
+    items:state.items,lookup:state.lookup,params:state.params,tx:state.tx,photos:photos};
+  const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_備份_'+dateStamp()+'.json';a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1200);toast('已備份 '+state.items.length+' 筆到檔案');
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  toast('已備份 '+state.items.length+' 筆（含 '+state.tx.length+' 筆交易'+(Object.keys(photos).length?'、'+Object.keys(photos).length+' 張照片':'')+'）');
 }
 function normItem(it){return {_id:it._id||uid(),name:String(it.name||'').trim(),element:(it.element??null)||null,
   bead:num(it.bead),wrist:num(it.wrist),ring:num(it.ring),chain:num(it.chain),
   cost:num(it.cost),qty:num(it.qty),date:it.date?String(it.date).slice(0,10):null,
-  efficacy:(it.efficacy??null)||null,safe:num(it.safe),link:(it.link??null)||null};}
+  efficacy:(it.efficacy??null)||null,safe:num(it.safe),link:(it.link??null)||null,
+  tags:Array.isArray(it.tags)?it.tags.map(t=>String(t).trim()).filter(Boolean):[],
+  costMode:it.costMode==='auto'?'auto':'manual',photoId:it.photoId||null};}
 function normLook(c){return {name:String(c.name||'').trim(),element:c.element??'',category:c.category??'',
   form:c.form??'',efficacy:c.efficacy??'',fit:c.fit??'',note:c.note??''};}
 function ensureParams(pr){const out=JSON.parse(JSON.stringify(DATA.params));if(pr&&typeof pr==='object')for(const k in PKEYS){const key=PKEYS[k];if(pr[key]!=null&&!isNaN(pr[key]))out[key]=Number(pr[key]);}return out;}
 function restoreJson(file){
   const rd=new FileReader();
-  rd.onload=e=>{try{
+  rd.onload=async e=>{try{
     let d=JSON.parse(e.target.result);
     if(Array.isArray(d))d={items:d};
     if(!d||!Array.isArray(d.items)){toast('檔案格式不符，找不到 items');return;}
     const newItems=d.items.filter(it=>it&&(it.name!=null)).map(normItem);
-    if(!confirm('還原會以備份檔覆蓋目前全部資料（'+state.items.length+' 筆 → '+newItems.length+' 筆），確定？'))return;
+    if(!confirm('還原會以備份檔覆蓋目前全部資料（'+state.items.length+' 筆 → '+newItems.length+' 筆，含交易與照片），確定？'))return;
     state.items=newItems;
     if(Array.isArray(d.lookup))state.lookup=d.lookup.filter(c=>c&&c.name).map(normLook);
     state.params=ensureParams(d.params);
+    state.tx=Array.isArray(d.tx)?d.tx:[];
+    if(d.photos&&typeof d.photos==='object'){for(const id in d.photos){try{await putPhoto(id,dataURLtoBlob(d.photos[id]));}catch(e){}}}
+    for(const k in _purl){delete _purl[k];}
     save();render();closeData();
     const ver=d._meta&&d._meta.ver?d._meta.ver:'舊版';
-    toast('已還原 '+state.items.length+' 筆（'+ver+' 格式，缺欄位已自動補齊）');
+    toast('已還原 '+state.items.length+' 筆 · '+state.tx.length+' 筆交易（'+ver+' 格式，缺欄位已補齊）');
   }catch(err){toast('還原失敗：'+err.message);}};
   rd.readAsText(file);
+}
+function exportShopee(){
+  const hdr=['商品名稱','建議售價','庫存數量','規格','五行','功效','分類標籤','商品連結'];
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=[hdr.map(q).join(',')];
+  state.items.forEach(it=>{const spec=[num(it.bead)!=null?'珠徑'+it.bead+'mm':'',num(it.wrist)!=null?'手圍'+it.wrist+'cm':'',num(it.ring)!=null?'戒圍'+it.ring:'',num(it.chain)!=null?'鍊長'+it.chain+'cm':''].filter(Boolean).join(' ');
+    rows.push([it.name,itemSuggest(it)??'',num(it.qty)??0,spec,it.element,it.efficacy,(it.tags||[]).join(' '),it.link].map(q).join(','));});
+  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='蝦皮上架_'+dateStamp()+'.csv';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('已匯出蝦皮 CSV（起手範本，需貼進官方分類表格）');
 }
 
 function buildWorkbook(){
@@ -779,7 +1101,7 @@ function buildWorkbook(){
   const wb=new ExcelJS.Workbook();
   wb.creator='靜月之光 庫存App';
   const goldHdr=(row,labels)=>{labels.forEach((h,i)=>{const c=row.getCell(i+1);c.value=h;c.font={bold:true,color:{argb:DARK}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:GOLD}};c.alignment={horizontal:'center',vertical:'middle'};});row.height=20;};
-  let cost=0,need=0;state.items.forEach(it=>{const c=num(it.cost)??0,q=num(it.qty)??0,s=num(it.safe)??gp(PKEYS.safe);cost+=c*q;if(q<=s)need++;});
+  let cost=0,need=0;state.items.forEach(it=>{const c=effectiveCost(it)??0,q=num(it.qty)??0,s=num(it.safe)??gp(PKEYS.safe);cost+=c*q;if(q<=s)need++;});
 
   // ── 進銷總表 (gilt title + header, formulas) ──
   const ws=wb.addWorksheet('進銷總表',{views:[{state:'frozen',ySplit:3}]});
@@ -808,15 +1130,15 @@ function buildWorkbook(){
     const r=xr, row=ws.getRow(r);
     row.getCell(1).value=++idx;row.getCell(2).value=it.name;row.getCell(3).value=it.element||'';
     row.getCell(4).value=num(it.bead);row.getCell(5).value=num(it.wrist);row.getCell(6).value=num(it.ring);row.getCell(7).value=num(it.chain);
-    row.getCell(8).value=num(it.cost);row.getCell(9).value=num(it.qty);
+    row.getCell(8).value=effectiveCost(it);row.getCell(9).value=num(it.qty);
     if(it.date){row.getCell(10).value=new Date(it.date);row.getCell(10).numFmt='yyyy-mm-dd';}
-    row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6)/(1-參數設定!$B$5),1))`,result:shopeePrice(it.cost)};
-    row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8)/(1-參數設定!$B$5),1)))`,result:suggestPrice(it.cost)};
+    row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6)/(1-參數設定!$B$5),1))`,result:itemShopee(it)};
+    row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8)/(1-參數設定!$B$5),1)))`,result:itemSuggest(it)};
     row.getCell(13).value=it.efficacy||'';row.getCell(14).value=num(it.safe)??gp(PKEYS.safe);
     const st=stockStatus(it.qty,num(it.safe)??gp(PKEYS.safe));
     row.getCell(15).value={formula:`IF(I${r}="","",IF(I${r}<=0,"❌ 缺貨",IF(I${r}<=N${r},"⚠ 補貨","✅")))`,result:st?(st.c==='out'?'❌ 缺貨':st.c==='low'?'⚠ 補貨':'✅'):''};
     if(it.link)row.getCell(16).value={text:it.link,hyperlink:it.link};
-    retail+=(suggestPrice(it.cost)??0)*(num(it.qty)??0);
+    retail+=(itemSuggest(it)??0)*(num(it.qty)??0);
     let rf=null,oc=null;
     if(st&&st.c==='out'){rf='FFF7E4E0';oc='FFC0392B';}
     else if(st&&st.c==='low'){rf='FFFAF1DD';oc='FFB7791F';}
@@ -872,7 +1194,7 @@ function exportCsv(){
   state.items.forEach(it=>{
     const st=stockStatus(it.qty,num(it.safe)??p('safe'));
     rows.push([it.name,it.element,it.bead,it.wrist,it.ring,it.chain,it.cost,it.qty,it.date,
-      shopeePrice(it.cost),suggestPrice(it.cost),it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
+      itemShopee(it),itemSuggest(it),it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
   });
   const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_庫存_'+dateStamp()+'.csv';a.click();
@@ -899,6 +1221,7 @@ async function importXlsx(file){
       items.push({_id:uid(),name:nm,element:sv(g(row,'五行')),bead:ni(g(row,'珠徑')),wrist:ni(g(row,'手圍')),ring:ni(g(row,'戒圍')),chain:ni(g(row,'鍊長')),
         cost:ni(g(row,'進價')),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
     if(!items.length){toast('進銷總表沒有讀到品項');return;}
+    items.forEach(normField);
     state.items=items;
 
     const wm=wb.getWorksheet('五行對照表');
@@ -964,8 +1287,10 @@ $('list').onclick=e=>{
   if(actBtn){const id=actBtn.dataset.id,act=actBtn.dataset.act;
     if(act==='edit'){const it=state.items.find(x=>x._id===id);if(it)openSheet(it);}
     else if(act==='del')quickDelete(id);
-    else if(act==='inc')adjustQty(id,1);
-    else if(act==='dec')adjustQty(id,-1);
+    else if(act==='sell')quickSell(id);
+    else if(act==='buy')quickBuy(id);
+    else if(act==='tx')openTx(id);
+    else if(act==='his')openHistory(id);
     return;}
   if(e.target.closest('a'))return;
   const c=e.target.closest('.card');
@@ -976,15 +1301,21 @@ $('sort').onchange=()=>{state.sort=$('sort').value;savePrefs();render();};
 $('lifeFilter').onchange=()=>{state.life=$('lifeFilter').value;savePrefs();render();};
 $('groupBtn').onclick=()=>{state.group=!state.group;$('groupBtn').classList.toggle('on',state.group);savePrefs();render();};
 $('elemChips').onclick=e=>{const b=e.target.closest('[data-elem],[data-clear]');if(!b)return;
-  if(b.dataset.clear){state.elems.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';}
+  if(b.dataset.clear){state.elems.clear();state.tags.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';}
   else{const k=b.dataset.elem;state.elems.has(k)?state.elems.delete(k):state.elems.add(k);}
   savePrefs();render();};
-$('stItemsBox').onclick=()=>{state.elems.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';savePrefs();render();};
+$('tagChips').onclick=e=>{const b=e.target.closest('[data-tag]');if(!b)return;const t=b.dataset.tag;state.tags.has(t)?state.tags.delete(t):state.tags.add(t);savePrefs();render();};
+$('lowBanner').onclick=e=>{if(e.target.id==='lowX'){state.lowDismissed=true;computeStats();return;}state.lowOnly=true;savePrefs();render();};
+$('stItemsBox').onclick=()=>{state.elems.clear();state.tags.clear();state.lowOnly=false;state.life='all';$('lifeFilter').value='all';savePrefs();render();};
 $('stNeedBox').onclick=()=>{state.lowOnly=!state.lowOnly;savePrefs();render();};
 $('statsToggle').onclick=()=>{state.statsOpen=!state.statsOpen;savePrefs();renderStatsDetail();};
 $('f_name').oninput=()=>{autofillFromName($('f_name').value,false);};
 $('f_name').onchange=()=>{autofillFromName($('f_name').value,true);};
 $('f_cost').oninput=updatePreview;$('f_qty').oninput=updatePreview;$('f_safe').oninput=updatePreview;
+$('f_costauto').onchange=applyCostMode;
+$('photoPick').onclick=()=>$('photoIn').click();
+$('photoIn').onchange=e=>{if(e.target.files[0]){handlePhotoFile(e.target.files[0]);e.target.value='';}};
+$('photoDel').onclick=removePhoto;
 $('moreDims').onclick=()=>{state.showAllDims=true;applyFormFields(findCrystal($('f_name').value)?.form||null);};
 $('gearBtn').onclick=openParams;
 $('pCancel').onclick=()=>$('pBackdrop').classList.remove('show');
@@ -993,7 +1324,26 @@ $('pBackdrop').onclick=e=>{if(e.target===$('pBackdrop'))$('pBackdrop').classList
 $('xlsxBtn').onclick=exportXlsx;$('csvBtn').onclick=exportCsv;
 $('impBtn').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=e=>{if(e.target.files[0]){importXlsx(e.target.files[0]);e.target.value='';}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();$('pBackdrop').classList.remove('show');closeData();closeLookup();$('lkeBackdrop').classList.remove('show');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();['pBackdrop','txBackdrop','hisBackdrop','statBackdrop','lkeBackdrop'].forEach(x=>$(x).classList.remove('show'));closeData();closeLookup();}});
+$('dataBtn').onclick=openData;
+$('dataClose').onclick=closeData;
+$('dataBackdrop').onclick=e=>{if(e.target===$('dataBackdrop'))closeData();};
+$('bkBtn').onclick=backupJson;
+$('rsBtn').onclick=()=>$('jsonIn').click();
+$('jsonIn').onchange=e=>{if(e.target.files[0]){restoreJson(e.target.files[0]);e.target.value='';}};
+$('shopeeBtn').onclick=exportShopee;
+$('statsBtn').onclick=openStats;
+$('statClose').onclick=()=>$('statBackdrop').classList.remove('show');
+$('statBackdrop').onclick=e=>{if(e.target===$('statBackdrop'))$('statBackdrop').classList.remove('show');};
+$('statPeriod').onclick=e=>{const b=e.target.closest('[data-period]');if(!b)return;state.statPeriod=b.dataset.period;renderSalesStats();};
+$('txCancel').onclick=()=>$('txBackdrop').classList.remove('show');
+$('txSave').onclick=saveTx;
+$('txBackdrop').onclick=e=>{if(e.target===$('txBackdrop'))$('txBackdrop').classList.remove('show');};
+$('txTypeSeg').onclick=e=>{const b=e.target.closest('[data-tx]');if(b)setTxType(b.dataset.tx);};
+$('tx_qty').oninput=updateTxPrev;$('tx_price').oninput=updateTxPrev;
+$('hisClose').onclick=()=>$('hisBackdrop').classList.remove('show');
+$('hisBackdrop').onclick=e=>{if(e.target===$('hisBackdrop'))$('hisBackdrop').classList.remove('show');};
+$('hisList').onclick=e=>{const b=e.target.closest('[data-tx]');if(b)deleteTx(b.dataset.tx);};
 $('dataBtn').onclick=openData;
 $('dataClose').onclick=closeData;
 $('dataBackdrop').onclick=e=>{if(e.target===$('dataBackdrop'))closeData();};
