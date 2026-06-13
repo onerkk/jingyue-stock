@@ -910,6 +910,7 @@ function render(){
     if(state.elems.size && !state.elems.has(primaryElem(it.element)))return false;
     if(state.tags.size && !(it.tags||[]).some(t=>state.tags.has(String(t).trim())))return false;
     if(state.lowOnly){const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(!st||st.c==='ok')return false;}
+    else if(!q){const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(st&&st.c==='out')return false;}
     return true;
   });
   arr=applySort(arr);
