@@ -16,18 +16,28 @@
   :root{
     --ink:#0c0e18; --ink2:#11131f; --panel:rgba(255,255,255,.045);
     --line:rgba(201,162,39,.20); --line2:rgba(255,255,255,.08);
-    --gold:#c9a227; --gilt:#e8cf86; --goldtxt:#d9c79a;
+    --gold:#c9a227; --gilt:#e8cf86; --goldtxt:#d9c79a; --glow:rgba(201,162,39,.10);
     --txt:#ece8df; --muted:#9a9486; --muted2:#6f6a60;
     --ok:#5fb87a; --low:#e0a23f; --out:#e0644f;
     --jin:#d9c27a; --mu:#5fb87a; --shui:#4a90d9; --huo:#e0644f; --tu:#c8923f; --duo:#b98ce0;
-    --r:14px;
+    --r:14px; --cardpad:13px 14px 13px 16px; --cardmb:9px; --cardfs:15px;
   }
+  /* ── theme presets (accent only; ink stays) ── */
+  body[data-theme="moon"]{--gold:#a9b4c2; --gilt:#d7dde6; --goldtxt:#c4ccd6; --line:rgba(169,180,194,.22); --glow:rgba(169,180,194,.10)}
+  body[data-theme="jade"]{--gold:#4f9e86; --gilt:#8fd6bd; --goldtxt:#9bd0bf; --line:rgba(79,158,134,.24); --glow:rgba(79,158,134,.10)}
+  body[data-theme="sakura"]{--gold:#d98aa0; --gilt:#f2b9c8; --goldtxt:#e6aebd; --line:rgba(217,138,160,.24); --glow:rgba(217,138,160,.10)}
+  /* ── density ── */
+  body[data-density="compact"]{--cardpad:9px 12px 9px 14px; --cardmb:6px}
+  body[data-density="roomy"]{--cardpad:16px 16px 16px 18px; --cardmb:13px}
+  /* ── card font scale ── */
+  body[data-cardfs="s"]{--cardfs:13.5px}
+  body[data-cardfs="l"]{--cardfs:16.5px}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;background:var(--ink);color:var(--txt)}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Noto Sans TC","Segoe UI",sans-serif;
     background:
-      radial-gradient(120% 60% at 50% -10%, rgba(201,162,39,.10), transparent 60%),
+      radial-gradient(120% 60% at 50% -10%, var(--glow), transparent 60%),
       radial-gradient(80% 40% at 85% 0%, rgba(74,144,217,.06), transparent 55%),
       var(--ink);
     min-height:100vh; padding-bottom:96px;
@@ -74,22 +84,23 @@
   .grouphdr .dot{width:9px;height:9px;border-radius:50%}
   .grouphdr .ln{flex:1;height:1px;background:var(--line2)}
   .grouphdr .ct{color:var(--muted);font-size:12px}
+  #list{font-size:var(--cardfs)}
   .card{position:relative;display:flex;gap:12px;background:var(--panel);border:1px solid var(--line2);
-    border-radius:var(--r);padding:13px 14px 13px 16px;margin-bottom:9px;cursor:pointer;overflow:hidden}
+    border-radius:var(--r);padding:var(--cardpad);margin-bottom:var(--cardmb);cursor:pointer;overflow:hidden}
   .card:active{background:rgba(255,255,255,.07)}
   .card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
   .card .body{flex:1;min-width:0}
   .card .ttl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .card .nm{font-size:16px;font-weight:600;color:var(--txt)}
-  .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid;letter-spacing:.04em;white-space:nowrap}
-  .specs{margin-top:5px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+  .card .nm{font-size:1.07em;font-weight:600;color:var(--txt)}
+  .badge{font-size:.73em;padding:2px 8px;border-radius:999px;border:1px solid;letter-spacing:.04em;white-space:nowrap}
+  .specs{margin-top:5px;font-size:.83em;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
   .specs b{color:var(--goldtxt);font-weight:500}
-  .priceline{margin-top:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+  .priceline{margin-top:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.87em}
   .pill{padding:3px 9px;border-radius:8px;font-variant-numeric:tabular-nums}
   .pill.cost{background:rgba(255,255,255,.05);color:var(--muted)}
   .pill.sale{background:rgba(201,162,39,.12);color:var(--gilt);border:1px solid var(--line)}
-  .qty{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .st{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;margin-left:auto}
+  .qty{font-size:.83em;color:var(--muted);font-variant-numeric:tabular-nums}
+  .st{font-size:.73em;padding:3px 9px;border-radius:999px;font-weight:600;margin-left:auto}
   .st.ok{background:rgba(95,184,122,.14);color:var(--ok)}
   .st.low{background:rgba(224,162,63,.16);color:var(--low)}
   .st.out{background:rgba(224,100,79,.16);color:var(--out)}
@@ -267,6 +278,23 @@
     #printArea td{padding:4px 6px;border-bottom:1px solid #eee}
     #printArea td:last-child{text-align:right;font-variant-numeric:tabular-nums}
   }
+  /* ── settings: appearance + cloud ── */
+  .setlabel{font-size:12.5px;color:var(--goldtxt);margin:16px 0 8px;letter-spacing:.06em}
+  .optrow{display:flex;gap:8px;flex-wrap:wrap}
+  .opt{flex:1;min-width:64px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--muted);
+    border-radius:10px;padding:10px 6px;font-size:13px;cursor:pointer;text-align:center}
+  .opt.on{border-color:var(--gold);color:var(--gilt);background:rgba(201,162,39,.10)}
+  .swrow{display:flex;gap:10px}
+  .sw{flex:1;border:1px solid var(--line2);border-radius:11px;padding:10px 6px 8px;cursor:pointer;text-align:center;background:rgba(255,255,255,.03)}
+  .sw.on{border-color:var(--gold)}
+  .sw .dot{width:100%;height:22px;border-radius:7px;margin-bottom:6px}
+  .sw span{font-size:11.5px;color:var(--muted)}
+  .sw.on span{color:var(--gilt)}
+  .cloudstat{background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:11px 13px;font-size:13px;margin:8px 0 10px;line-height:1.55}
+  .cloudstat .dotpill{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .synccode{display:flex;gap:8px;align-items:center}
+  .synccode input{flex:1;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+  textarea.cfg{min-height:84px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -460,6 +488,7 @@
         <button class="btn ghost" id="statsBtn" type="button">🧾 銷售統計</button>
         <button class="btn ghost" id="healthBtn" type="button">📦 庫存健康</button>
         <button class="btn ghost" id="printBtn" type="button">🖨 列印 / 存 PDF 月報</button>
+        <button class="btn ghost" id="setBtn" type="button">⚙ 外觀與雲端設定</button>
         <button class="btn ghost" id="lkOpenBtn" type="button">📖 編輯五行對照表</button>
         <button class="btn ghost" id="shopeeBtn" type="button">🛒 蝦皮上架 CSV</button>
         <button class="btn ghost" id="dataClose" type="button">關閉</button>
@@ -556,6 +585,57 @@
     </div>
   </div>
 
+  <!-- Settings sheet: appearance + cloud -->
+  <div class="backdrop" id="setBackdrop">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="grab"></div>
+      <h2>外觀與雲端設定</h2>
+
+      <div class="setlabel">主題色</div>
+      <div class="swrow" id="themeRow">
+        <div class="sw" data-theme=""><div class="dot" style="background:linear-gradient(135deg,#c9a227,#e8cf86)"></div><span>鎏金</span></div>
+        <div class="sw" data-theme="moon"><div class="dot" style="background:linear-gradient(135deg,#a9b4c2,#d7dde6)"></div><span>月白</span></div>
+        <div class="sw" data-theme="jade"><div class="dot" style="background:linear-gradient(135deg,#4f9e86,#8fd6bd)"></div><span>青碧</span></div>
+        <div class="sw" data-theme="sakura"><div class="dot" style="background:linear-gradient(135deg,#d98aa0,#f2b9c8)"></div><span>緋櫻</span></div>
+      </div>
+
+      <div class="setlabel">卡片字級</div>
+      <div class="optrow" id="cardfsRow">
+        <div class="opt" data-cardfs="s">小</div>
+        <div class="opt" data-cardfs="">標準</div>
+        <div class="opt" data-cardfs="l">大</div>
+      </div>
+
+      <div class="setlabel">排版鬆緊</div>
+      <div class="optrow" id="densityRow">
+        <div class="opt" data-density="compact">緊湊</div>
+        <div class="opt" data-density="">標準</div>
+        <div class="opt" data-density="roomy">寬鬆</div>
+      </div>
+
+      <div class="setlabel" style="margin-top:22px">☁ 雲端同步 <span style="color:var(--muted);font-weight:400">（多裝置共用同一份資料）</span></div>
+      <div class="cloudstat" id="cloudStat">尚未啟用。啟用後可在手機、電腦間同步庫存與交易。</div>
+      <div class="field">
+        <label>Firebase 設定 <span class="hint">貼上 firebaseConfig 物件</span></label>
+        <textarea id="fbCfg" class="cfg" placeholder='{ "apiKey":"…", "authDomain":"…", "projectId":"…", "appId":"…" }'></textarea>
+      </div>
+      <div class="field">
+        <label>同步碼 <span class="hint">兩支裝置填一樣的才會同步</span></label>
+        <div class="synccode">
+          <input id="fbCode" placeholder="例：jy-8f3k2p" autocomplete="off">
+          <button class="btn ghost" id="codeGen" type="button" style="flex:0 0 auto;padding:11px 13px">產生</button>
+        </div>
+      </div>
+      <div class="btns" style="margin-bottom:4px">
+        <button class="btn gold" id="cloudConnect" type="button">啟用 / 連線</button>
+        <button class="btn del" id="cloudOff" type="button" style="display:none">關閉同步</button>
+      </div>
+      <div class="sub" style="margin-top:6px">資料存在你自己的 Firebase 專案。同步碼請自己保管——知道你的設定和同步碼的人才能存取，所以別公開。</div>
+
+      <div class="btns" style="margin-top:14px"><button class="btn ghost" id="setClose" type="button">關閉</button></div>
+    </div>
+  </div>
+
   <!-- Inventory health sheet -->
   <div class="backdrop" id="healthBackdrop">
     <div class="sheet" role="dialog" aria-modal="true">
@@ -580,13 +660,21 @@ const PREFS='jingyue_inv_prefs_v6';
 let memOnly=false;
 let state={items:[],lookup:[],params:{},tx:[],showAllDims:false,editId:null,group:false,
   life:'all',elems:new Set(),tags:new Set(),lowOnly:false,sort:'def',expandedId:null,statsOpen:false,lkEditId:null,
-  txItemId:null,txType:'sale',hisItemId:null,statPeriod:'month',lowDismissed:false,photoTmp:undefined};
+  txItemId:null,txType:'sale',hisItemId:null,statPeriod:'month',lowDismissed:false,photoTmp:undefined,
+  theme:'',cardfs:'',density:''};
 
 function loadPrefs(){try{const r=localStorage.getItem(PREFS);if(r){const o=JSON.parse(r);
   state.sort=o.sort||'def';state.group=!!o.group;state.life=o.life||'all';
-  state.elems=new Set(Array.isArray(o.elems)?o.elems:[]);state.lowOnly=!!o.lowOnly;state.statsOpen=!!o.statsOpen;}}catch(e){}}
+  state.elems=new Set(Array.isArray(o.elems)?o.elems:[]);state.lowOnly=!!o.lowOnly;state.statsOpen=!!o.statsOpen;
+  state.theme=o.theme||'';state.cardfs=o.cardfs||'';state.density=o.density||'';}}catch(e){}}
 function savePrefs(){try{localStorage.setItem(PREFS,JSON.stringify({sort:state.sort,group:state.group,life:state.life,
-  elems:[...state.elems],lowOnly:state.lowOnly,statsOpen:state.statsOpen}));}catch(e){}}
+  elems:[...state.elems],lowOnly:state.lowOnly,statsOpen:state.statsOpen,
+  theme:state.theme,cardfs:state.cardfs,density:state.density}));}catch(e){}}
+function applyAppearance(){const b=document.body;
+  b.dataset.theme=state.theme;b.dataset.cardfs=state.cardfs;b.dataset.density=state.density;
+  if(!state.theme)b.removeAttribute('data-theme');
+  if(!state.cardfs)b.removeAttribute('data-cardfs');
+  if(!state.density)b.removeAttribute('data-density');}
 
 const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費',fix:'固定成本',cap:'利潤封頂',safe:'安全庫存(預設)'};
 function p(k){return Number(state.params[PKEYS[k]])||0;}
@@ -598,10 +686,11 @@ function normField(it){
   if(it.photoId===undefined)it.photoId=null;
   return it;
 }
+let localUpdatedAt=0, applyingRemote=false;
 function load(){
   let saved=null;
   try{const raw=localStorage.getItem(KEY); if(raw) saved=JSON.parse(raw);}catch(e){memOnly=true;}
-  if(saved){state.items=saved.items;state.lookup=saved.lookup;state.params=saved.params;state.tx=Array.isArray(saved.tx)?saved.tx:[];}
+  if(saved){state.items=saved.items;state.lookup=saved.lookup;state.params=saved.params;state.tx=Array.isArray(saved.tx)?saved.tx:[];localUpdatedAt=saved.updatedAt||0;}
   else{
     state.params=JSON.parse(JSON.stringify(DATA.params));
     state.lookup=DATA.lookup.map(x=>({...x}));
@@ -612,10 +701,12 @@ function load(){
   try{localStorage.getItem(KEY);}catch(e){memOnly=true;}
   if(memOnly) document.getElementById('memNote').style.display='block';
 }
-function save(){
-  try{localStorage.setItem(KEY,JSON.stringify({items:state.items,lookup:state.lookup,params:state.params,tx:state.tx}));}
+function saveLocal(){
+  localUpdatedAt=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify({items:state.items,lookup:state.lookup,params:state.params,tx:state.tx,updatedAt:localUpdatedAt}));}
   catch(e){memOnly=true;document.getElementById('memNote').style.display='block';}
 }
+function save(){saveLocal();if(cloud.on&&!applyingRemote)pushCloudSoon();}
 
 /* ───────── pricing (exact match to spreadsheet) ───────── */
 function num(x){return (x===''||x==null||isNaN(x))?null:Number(x);}
@@ -1115,6 +1206,71 @@ function printReport(){
   window.print();
 }
 
+/* ───────── cloud sync (Firebase anonymous auth + Firestore) ───────── */
+const CLOUD_KEY='jingyue_cloud_v1', DEV_KEY='jingyue_device_v1';
+let cloud={on:false,config:null,code:null};
+let fbApp=null,fbAuth=null,fbDoc=null,fbUnsub=null,lastPush=0,deviceId='',pushTimer=null;
+function loadCloudCfg(){try{const r=localStorage.getItem(CLOUD_KEY);if(r){const o=JSON.parse(r);cloud.on=!!o.on;cloud.config=o.config||null;cloud.code=o.code||null;}}catch(e){}
+  try{deviceId=localStorage.getItem(DEV_KEY)||'';if(!deviceId){deviceId='d'+Math.random().toString(36).slice(2,10);localStorage.setItem(DEV_KEY,deviceId);}}catch(e){deviceId='d'+Math.random().toString(36).slice(2,10);}}
+function saveCloudCfg(){try{localStorage.setItem(CLOUD_KEY,JSON.stringify(cloud));}catch(e){}}
+function loadFirebaseSDK(){return new Promise((res,rej)=>{
+  if(window.firebase&&firebase.firestore)return res();
+  const base='https://www.gstatic.com/firebasejs/10.12.0/';
+  const files=['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'];
+  let i=0;(function next(){if(i>=files.length)return res();const s=document.createElement('script');s.src=base+files[i];s.onload=()=>{i++;next();};s.onerror=()=>rej(new Error('Firebase SDK 載入失敗（需連網）'));document.head.appendChild(s);})();});}
+function serializeState(){return {items:state.items,lookup:state.lookup,params:state.params,tx:state.tx};}
+function pushCloudSoon(){clearTimeout(pushTimer);pushTimer=setTimeout(()=>{pushCloud().catch(()=>{});},1200);}
+async function pushCloud(){if(!fbDoc||!cloud.on)return;const payload=serializeState();payload.updatedAt=Date.now();payload._by=deviceId;lastPush=payload.updatedAt;
+  await fbDoc.set(payload);cloudStatus('已同步 '+new Date().toLocaleTimeString('zh-TW'),'#5fb87a');}
+function applyRemote(r){applyingRemote=true;try{
+  state.items=Array.isArray(r.items)?r.items:[];state.items.forEach(it=>{if(!it._id)it._id=uid();normField(it);});
+  if(Array.isArray(r.lookup))state.lookup=r.lookup;if(r.params)state.params=r.params;state.tx=Array.isArray(r.tx)?r.tx:[];
+  saveLocal();render();
+}finally{applyingRemote=false;}}
+async function initCloud(){
+  if(!cloud.on||!cloud.config||!cloud.code)return;
+  await loadFirebaseSDK();
+  if(!firebase.apps.length)fbApp=firebase.initializeApp(cloud.config);else fbApp=firebase.app();
+  fbAuth=firebase.auth();
+  await fbAuth.signInAnonymously();
+  const uid=fbAuth.currentUser?fbAuth.currentUser.uid:'?';
+  fbDoc=firebase.firestore().collection('jingyue_inventory').doc(cloud.code);
+  const snap=await fbDoc.get();
+  if(snap.exists){const r=snap.data();
+    if(!r.updatedAt||(localUpdatedAt&&localUpdatedAt>r.updatedAt)){await pushCloud();}
+    else{applyRemote(r);cloudStatus('已從雲端載入','#5fb87a');}
+  }else{await pushCloud();}
+  if(fbUnsub)fbUnsub();
+  fbUnsub=fbDoc.onSnapshot(s=>{if(!s.exists||s.metadata.hasPendingWrites)return;const r=s.data();
+    if(r._by===deviceId)return;if(r.updatedAt&&r.updatedAt===lastPush)return;applyRemote(r);toast('已從雲端更新');},
+    err=>{cloudStatus('同步中斷：'+err.code,'#e0644f');});
+  cloudStatus('已連線 · 同步碼 '+cloud.code,'#5fb87a');updateCloudButtons();
+}
+function parseFirebaseConfig(raw){
+  let t=String(raw).trim().replace(/^(?:const|var|let)?\s*[a-zA-Z_$][\w$]*\s*=\s*/,'').replace(/;\s*$/,'');
+  try{return JSON.parse(t);}catch(e){}
+  const j=t.replace(/([{,]\s*)([a-zA-Z_$][\w$]*)\s*:/g,'$1"$2":').replace(/'/g,'"').replace(/,(\s*[}\]])/g,'$1');
+  return JSON.parse(j);
+}
+async function cloudConnect(){
+  const raw=$('fbCfg').value.trim(),code=$('fbCode').value.trim();
+  if(!raw){toast('請貼上 Firebase 設定');return;}
+  if(!code){toast('請填或產生同步碼');return;}
+  let config;try{config=parseFirebaseConfig(raw);}catch(e){toast('Firebase 設定看不懂，請整段貼上');return;}
+  if(!config.apiKey||!config.projectId){toast('設定缺 apiKey 或 projectId');return;}
+  cloud.on=true;cloud.config=config;cloud.code=code;saveCloudCfg();
+  cloudStatus('連線中…','#e0a23f');
+  try{await initCloud();toast('雲端已連線');}
+  catch(e){cloud.on=false;saveCloudCfg();cloudStatus('連線失敗：'+(e.message||e),'#e0644f');updateCloudButtons();toast('連線失敗，看狀態列訊息');}
+}
+function cloudDisable(){if(fbUnsub){fbUnsub();fbUnsub=null;}cloud.on=false;saveCloudCfg();
+  try{if(fbAuth)fbAuth.signOut();}catch(e){}
+  cloudStatus('已關閉同步。資料仍保留在本機。','#9a9486');updateCloudButtons();toast('已關閉雲端同步');}
+function cloudStatus(msg,color){const el=$('cloudStat');if(!el)return;
+  el.innerHTML=(color?`<span class="dotpill" style="background:${color}"></span>`:'')+esc(msg);}
+function updateCloudButtons(){$('cloudOff').style.display=cloud.on?'block':'none';
+  $('cloudConnect').textContent=cloud.on?'重新連線':'啟用 / 連線';}
+
 /* ───────── params ───────── */
 function openParams(){
   $('p_markup').value=p('markup');$('p_comm').value=p('comm');$('p_ship').value=p('ship');
@@ -1333,6 +1489,16 @@ async function importXlsx(file){
 /* ───────── lookup (五行對照表) manager ───────── */
 function openLookup(){closeData();$('lkQ').value='';renderLookup();$('lkBackdrop').classList.add('show');}
 function closeLookup(){$('lkBackdrop').classList.remove('show');}
+function openSet(){closeData();
+  document.querySelectorAll('#themeRow .sw').forEach(b=>b.classList.toggle('on',(b.dataset.theme||'')===state.theme));
+  document.querySelectorAll('#cardfsRow .opt').forEach(b=>b.classList.toggle('on',(b.dataset.cardfs||'')===state.cardfs));
+  document.querySelectorAll('#densityRow .opt').forEach(b=>b.classList.toggle('on',(b.dataset.density||'')===state.density));
+  $('fbCfg').value=cloud.config?JSON.stringify(cloud.config,null,1):'';
+  $('fbCode').value=cloud.code||'';
+  updateCloudButtons();
+  if(cloud.on)cloudStatus('已連線 · 同步碼 '+cloud.code,'#5fb87a');
+  else cloudStatus('尚未啟用。啟用後可在手機、電腦間同步庫存與交易。',null);
+  $('setBackdrop').classList.add('show');}
 function renderLookup(){
   const q=$('lkQ').value.trim().toLowerCase();
   const arr=state.lookup.filter(c=>!q||[c.name,c.element,c.efficacy,c.fit,c.category,c.form].some(v=>String(v||'').toLowerCase().includes(q)));
@@ -1418,7 +1584,7 @@ $('pBackdrop').onclick=e=>{if(e.target===$('pBackdrop'))$('pBackdrop').classList
 $('xlsxBtn').onclick=exportXlsx;$('csvBtn').onclick=exportCsv;
 $('impBtn').onclick=()=>$('fileIn').click();
 $('fileIn').onchange=e=>{if(e.target.files[0]){importXlsx(e.target.files[0]);e.target.value='';}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();['pBackdrop','txBackdrop','hisBackdrop','statBackdrop','healthBackdrop','lkeBackdrop'].forEach(x=>$(x).classList.remove('show'));closeData();closeLookup();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();['pBackdrop','txBackdrop','hisBackdrop','statBackdrop','healthBackdrop','setBackdrop','lkeBackdrop'].forEach(x=>$(x).classList.remove('show'));closeData();closeLookup();}});
 $('dataBtn').onclick=openData;
 $('dataClose').onclick=closeData;
 $('dataBackdrop').onclick=e=>{if(e.target===$('dataBackdrop'))closeData();};
@@ -1429,6 +1595,15 @@ $('shopeeBtn').onclick=exportShopee;
 $('statsBtn').onclick=openStats;
 $('healthBtn').onclick=openHealth;
 $('printBtn').onclick=printReport;
+$('setBtn').onclick=openSet;
+$('setClose').onclick=()=>$('setBackdrop').classList.remove('show');
+$('setBackdrop').onclick=e=>{if(e.target===$('setBackdrop'))$('setBackdrop').classList.remove('show');};
+$('themeRow').onclick=e=>{const b=e.target.closest('[data-theme]');if(!b)return;state.theme=b.dataset.theme||'';applyAppearance();savePrefs();document.querySelectorAll('#themeRow .sw').forEach(x=>x.classList.toggle('on',x===b));};
+$('cardfsRow').onclick=e=>{const b=e.target.closest('[data-cardfs]');if(!b)return;state.cardfs=b.dataset.cardfs||'';applyAppearance();savePrefs();document.querySelectorAll('#cardfsRow .opt').forEach(x=>x.classList.toggle('on',x===b));};
+$('densityRow').onclick=e=>{const b=e.target.closest('[data-density]');if(!b)return;state.density=b.dataset.density||'';applyAppearance();savePrefs();document.querySelectorAll('#densityRow .opt').forEach(x=>x.classList.toggle('on',x===b));};
+$('cloudConnect').onclick=cloudConnect;
+$('cloudOff').onclick=cloudDisable;
+$('codeGen').onclick=()=>{$('fbCode').value='jy-'+Math.random().toString(36).slice(2,8);};
 $('healthClose').onclick=()=>$('healthBackdrop').classList.remove('show');
 $('healthBackdrop').onclick=e=>{if(e.target===$('healthBackdrop'))$('healthBackdrop').classList.remove('show');};
 $('statClose').onclick=()=>$('statBackdrop').classList.remove('show');
@@ -1461,10 +1636,13 @@ $('lkeBackdrop').onclick=e=>{if(e.target===$('lkeBackdrop'))$('lkeBackdrop').cla
 
 /* ───────── init ───────── */
 loadPrefs();
+applyAppearance();
+loadCloudCfg();
 $('sort').value=state.sort;
 $('lifeFilter').value=state.life;
 $('groupBtn').classList.toggle('on',state.group);
 load();render();
+if(cloud.on){initCloud().catch(e=>cloudStatus('自動連線失敗：'+(e.message||e),'#e0644f'));}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
 </script>
 </body>
