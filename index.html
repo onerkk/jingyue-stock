@@ -385,6 +385,10 @@
         <input type="checkbox" id="f_costauto">
         <span id="wacLabel">成本改用「進貨加權平均」自動算</span>
       </label>
+      <label class="remember" id="certWrap" style="margin:-4px 0 14px">
+        <input type="checkbox" id="f_cert">
+        <span>附證書（定價會加上證書成本）</span>
+      </label>
 
       <div id="dimGroup">
         <div class="field dim-field" data-field="bead"><label>珠徑 <span class="hint">mm</span></label><input id="f_bead" type="number" inputmode="decimal" placeholder="—"></div>
@@ -457,18 +461,22 @@
     <div class="sheet" id="pSheet" role="dialog" aria-modal="true" style="max-width:440px">
       <div class="grab"></div>
       <h2>定價參數</h2>
-      <div class="sub">改這裡，全部品項的蝦皮定價與建議售價會即時重算</div>
+      <div class="sub">改這裡，全部品項的蝦皮定價與淨利會即時重算。加價/抽成用「層」（6 = 60%、2 = 20%）。</div>
       <div class="row2">
-        <div class="field"><label>加價倍率</label><input id="p_markup" type="number" step="0.01" inputmode="decimal"></div>
-        <div class="field"><label>蝦皮抽成</label><input id="p_comm" type="number" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label>加價層 <span class="hint">6 = 賺6成</span></label><input id="p_markup" type="number" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label>蝦皮抽成層 <span class="hint">2 = 抽2成</span></label><input id="p_comm" type="number" step="0.1" inputmode="decimal"></div>
       </div>
       <div class="row2">
         <div class="field"><label>運費 <span class="hint">元</span></label><input id="p_ship" type="number" inputmode="numeric"></div>
         <div class="field"><label>固定成本 <span class="hint">元</span></label><input id="p_fix" type="number" inputmode="numeric"></div>
       </div>
       <div class="row2">
+        <div class="field"><label>證書成本 <span class="hint">元</span></label><input id="p_cert" type="number" inputmode="numeric"></div>
         <div class="field"><label>利潤封頂 <span class="hint">元</span></label><input id="p_cap" type="number" inputmode="numeric"></div>
+      </div>
+      <div class="row2">
         <div class="field"><label>預設安全庫存 <span class="hint">件</span></label><input id="p_safe" type="number" inputmode="numeric"></div>
+        <div class="field"></div>
       </div>
       <div class="btns">
         <button class="btn ghost" id="pCancel" type="button">取消</button>
@@ -674,7 +682,7 @@ function applyAppearance(){const b=document.body;
   if(!state.cardfs)b.removeAttribute('data-cardfs');
   if(!state.density)b.removeAttribute('data-density');}
 
-const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費',fix:'固定成本',cap:'利潤封頂',safe:'安全庫存(預設)'};
+const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費',fix:'固定成本',cap:'利潤封頂',safe:'安全庫存(預設)',cert:'證書成本'};
 function p(k){return Number(state.params[PKEYS[k]])||0;}
 const uid=()=>'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 
@@ -682,6 +690,7 @@ function normField(it){
   if(!Array.isArray(it.tags))it.tags=it.tags?[String(it.tags)]:[];
   if(it.costMode!=='auto')it.costMode='manual';
   if(it.photoId===undefined)it.photoId=null;
+  it.cert=!!it.cert;
   return it;
 }
 let localUpdatedAt=0, applyingRemote=false;
@@ -706,10 +715,12 @@ function saveLocal(){
 }
 function save(){saveLocal();if(cloud.on&&!applyingRemote)pushCloudSoon();}
 
-/* ───────── pricing (exact match to spreadsheet) ───────── */
+/* ───────── pricing ─────────
+   定價 = ⌈(進價×(1+加價) + 運費 + 固定 + 證書) ÷ (1−抽成)⌉  （雜費不乘倍率）
+   實拿淨利 = 定價×(1−抽成) − 運費 − 固定 − 證書 − 進價 ≈ 進價×加價 */
 function num(x){return (x===''||x==null||isNaN(x))?null:Number(x);}
-function shopeePrice(cost){const c=num(cost);if(c===null)return null;return Math.ceil((c*(1+p('markup'))+p('fix')+p('ship'))/(1-p('comm')));}
-function suggestPrice(cost){const c=num(cost);if(c===null)return null;const s=shopeePrice(c);const cap=Math.ceil((c+p('cap'))/(1-p('comm')));return Math.min(s,cap);}
+function shopeePrice(cost,certCost){const c=num(cost);if(c===null)return null;certCost=certCost||0;return Math.ceil((c*(1+p('markup'))+p('fix')+p('ship')+certCost)/(1-p('comm')));}
+function suggestPrice(cost,certCost){const c=num(cost);if(c===null)return null;certCost=certCost||0;const s=shopeePrice(c,certCost);const cap=Math.ceil((c+p('cap')+p('fix')+p('ship')+certCost)/(1-p('comm')));return Math.min(s,cap);}
 function stockStatus(qty,safe){const q=num(qty);if(q===null)return null;const s=num(safe)??0;if(q<=0)return{t:'缺貨',c:'out'};if(q<=s)return{t:'補貨',c:'low'};return{t:'充足',c:'ok'};}
 
 /* ── cost: manual or 進貨加權平均 (WAC from buy transactions) ── */
@@ -719,8 +730,11 @@ function wac(itemId){
   return q>0?Math.round(amt/q):null;
 }
 function effectiveCost(it){if(it&&it.costMode==='auto'){const w=wac(it._id);if(w!=null)return w;}return num(it&&it.cost);}
-function itemShopee(it){return shopeePrice(effectiveCost(it));}
-function itemSuggest(it){return suggestPrice(effectiveCost(it));}
+function certCostOf(it){return it&&it.cert?p('cert'):0;}
+function itemShopee(it){return shopeePrice(effectiveCost(it),certCostOf(it));}
+function itemSuggest(it){return suggestPrice(effectiveCost(it),certCostOf(it));}
+function itemNet(it){const price=itemSuggest(it),ec=effectiveCost(it);if(price==null||ec==null)return null;
+  return Math.round(price*(1-p('comm'))-p('ship')-p('fix')-certCostOf(it)-ec);}
 
 /* ── photos via IndexedDB (graceful if unavailable) ── */
 let _db=null;
@@ -842,18 +856,21 @@ function specHtml(it){
 }
 function cardHtml(it){
   const col=elemColor(it.element);
-  const sale=itemSuggest(it), shop=itemShopee(it), ec=effectiveCost(it);
+  const sale=itemSuggest(it), shop=itemShopee(it), ec=effectiveCost(it), net=itemNet(it);
   const st=stockStatus(it.qty,num(it.safe)??p('safe'));
   const saleHtml=sale!=null?`<span class="pill sale">售 ${fmt(sale)}</span>`:'';
   const costHtml=ec!=null?`<span class="pill cost">進 ${fmt(ec)}${it.costMode==='auto'?' 均':''}</span>`:'';
+  const netHtml=net!=null?`<span class="pill net" style="color:${net>=0?'var(--ok)':'var(--out)'};background:${net>=0?'rgba(95,184,122,.12)':'rgba(224,100,79,.12)'}">淨 ${fmt(net)}</span>`:'';
+  const certHtml=it.cert?`<span class="pill" style="color:var(--gilt);background:rgba(201,162,39,.1)">證</span>`:'';
   const stHtml=st?`<span class="st ${st.c}">${st.t}</span>`:'';
   const tagsHtml=(it.tags&&it.tags.length)?`<div class="tagrow">${it.tags.map(t=>`<span class="tpill">${esc(t)}</span>`).join('')}</div>`:'';
   const thumb=it.photoId?`<img class="thumb" data-photo="${esc(it.photoId)}" alt="">`:'';
   const open=state.expandedId===it._id;
   const exp=open?`<div class="cardexp">
       ${it.photoId?`<img class="exp-photo" data-photo="${esc(it.photoId)}" alt="">`:''}
-      <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
+      <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.cert?' <span style="opacity:.3">·</span> 附證書':''}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
       <div class="exp-price">蝦皮定價 <b>${shop!=null?fmt(shop):'—'}</b> ｜ 建議售價 <b>${sale!=null?fmt(sale):'—'}</b></div>
+      <div class="exp-price" style="margin-top:2px">實拿淨利 <b style="color:${net>=0?'var(--ok)':'var(--out)'}">${net!=null?fmt(net):'—'}</b> <span style="color:var(--muted2);font-size:.85em">（扣蝦皮抽成/運費/固定${it.cert?'/證書':''}後）</span></div>
       <div class="exp-actions">
         <button class="xb minus" data-act="sell" data-id="${it._id}">賣 1</button>
         <span class="xqty">庫存 ${num(it.qty)??0}</span>
@@ -872,7 +889,7 @@ function cardHtml(it){
       <div class="ttl"><span class="nm">${esc(it.name)}</span>
         <span class="badge" style="color:${col};border-color:${col}66">${esc(it.element||'—')}</span></div>
       <div class="specs">${specHtml(it)||'<span style="color:var(--muted2)">尚無規格</span>'}</div>
-      <div class="priceline">${costHtml}${saleHtml}<span class="qty">×${num(it.qty)??0}</span>${stHtml}</div>
+      <div class="priceline">${costHtml}${saleHtml}${netHtml}${certHtml}<span class="qty">×${num(it.qty)??0}</span>${stHtml}</div>
       ${tagsHtml}
       ${exp}
     </div></div>`;
@@ -978,7 +995,8 @@ function autofillFromName(name,force){
 }
 function updatePreview(){
   const cost=$('f_cost').value;
-  const sh=shopeePrice(cost), sg=suggestPrice(cost);
+  const cc=$('f_cert')&&$('f_cert').checked?p('cert'):0;
+  const sh=shopeePrice(cost,cc), sg=suggestPrice(cost,cc);
   $('pvShopee').textContent=sh!=null?fmt(sh):'—';
   $('pvSug').textContent=sg!=null?fmt(sg):'—';
   const st=stockStatus($('f_qty').value, $('f_safe').value!==''?$('f_safe').value:p('safe'));
@@ -1052,6 +1070,7 @@ function openSheet(item){
   $('f_eff').value=g(item&&item.efficacy); $('f_link').value=g(item&&item.link);
   $('f_tags').value=item&&item.tags?item.tags.join(', '):'';
   $('f_costauto').checked=item?item.costMode==='auto':false;
+  $('f_cert').checked=item?!!item.cert:false;
   state.photoTmp=item?(item.photoId||null):null;
   if(state.photoTmp){$('photoEmpty').style.display='none';$('photoDel').style.display='block';$('photoPreview').style.display='block';photoURL(state.photoTmp).then(u=>{if(u)$('photoPreview').src=u;});}
   else{$('photoPreview').style.display='none';$('photoPreview').removeAttribute('src');$('photoEmpty').style.display='block';$('photoDel').style.display='none';}
@@ -1075,7 +1094,7 @@ function collect(){
     ring:n('f_ring'),chain:n('f_chain'),cost:cost,qty:n('f_qty'),
     safe:$('f_safe').value.trim()===''?null:Number($('f_safe').value),
     date:$('f_date').value||null,efficacy:v('f_eff')||null,link:v('f_link')||null,
-    tags:tags,costMode:costMode,photoId:state.photoTmp??null};
+    tags:tags,costMode:costMode,photoId:state.photoTmp??null,cert:$('f_cert').checked};
 }
 function saveItem(){
   const d=collect();
@@ -1337,15 +1356,16 @@ function updateCloudButtons(){$('cloudOff').style.display=cloud.on?'block':'none
 
 /* ───────── params ───────── */
 function openParams(){
-  $('p_markup').value=p('markup');$('p_comm').value=p('comm');$('p_ship').value=p('ship');
-  $('p_fix').value=p('fix');$('p_cap').value=p('cap');$('p_safe').value=p('safe');
+  $('p_markup').value=+(p('markup')*10).toFixed(2);$('p_comm').value=+(p('comm')*10).toFixed(2);$('p_ship').value=p('ship');
+  $('p_fix').value=p('fix');$('p_cert').value=p('cert');$('p_cap').value=p('cap');$('p_safe').value=p('safe');
   $('pBackdrop').classList.add('show');
 }
 function saveParams(){
-  state.params[PKEYS.markup]=Number($('p_markup').value)||0;
-  state.params[PKEYS.comm]=Number($('p_comm').value)||0;
+  state.params[PKEYS.markup]=(Number($('p_markup').value)||0)/10;
+  state.params[PKEYS.comm]=(Number($('p_comm').value)||0)/10;
   state.params[PKEYS.ship]=Number($('p_ship').value)||0;
   state.params[PKEYS.fix]=Number($('p_fix').value)||0;
+  state.params[PKEYS.cert]=Number($('p_cert').value)||0;
   state.params[PKEYS.cap]=Number($('p_cap').value)||0;
   state.params[PKEYS.safe]=Number($('p_safe').value)||0;
   save();render();$('pBackdrop').classList.remove('show');toast('參數已套用，定價已重算');
@@ -1374,7 +1394,7 @@ function normItem(it){return {_id:it._id||uid(),name:String(it.name||'').trim(),
   cost:num(it.cost),qty:num(it.qty),date:it.date?String(it.date).slice(0,10):null,
   efficacy:(it.efficacy??null)||null,safe:num(it.safe),link:(it.link??null)||null,
   tags:Array.isArray(it.tags)?it.tags.map(t=>String(t).trim()).filter(Boolean):[],
-  costMode:it.costMode==='auto'?'auto':'manual',photoId:it.photoId||null};}
+  costMode:it.costMode==='auto'?'auto':'manual',photoId:it.photoId||null,cert:!!it.cert};}
 function normLook(c){return {name:String(c.name||'').trim(),element:c.element??'',category:c.category??'',
   form:c.form??'',efficacy:c.efficacy??'',fit:c.fit??'',note:c.note??''};}
 function ensureParams(pr){const out=JSON.parse(JSON.stringify(DATA.params));if(pr&&typeof pr==='object')for(const k in PKEYS){const key=PKEYS[k];if(pr[key]!=null&&!isNaN(pr[key]))out[key]=Number(pr[key]);}return out;}
@@ -1446,8 +1466,8 @@ function buildWorkbook(){
     row.getCell(4).value=num(it.bead);row.getCell(5).value=num(it.wrist);row.getCell(6).value=num(it.ring);row.getCell(7).value=num(it.chain);
     row.getCell(8).value=effectiveCost(it);row.getCell(9).value=num(it.qty);
     if(it.date){row.getCell(10).value=new Date(it.date);row.getCell(10).numFmt='yyyy-mm-dd';}
-    row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6)/(1-參數設定!$B$5),1))`,result:itemShopee(it)};
-    row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8)/(1-參數設定!$B$5),1)))`,result:itemSuggest(it)};
+    row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6${it.cert?'+參數設定!$B$10':''})/(1-參數設定!$B$5),1))`,result:itemShopee(it)};
+    row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8+參數設定!$B$7+參數設定!$B$6${it.cert?'+參數設定!$B$10':''})/(1-參數設定!$B$5),1)))`,result:itemSuggest(it)};
     row.getCell(13).value=it.efficacy||'';row.getCell(14).value=num(it.safe)??gp(PKEYS.safe);
     const st=stockStatus(it.qty,num(it.safe)??gp(PKEYS.safe));
     row.getCell(15).value={formula:`IF(I${r}="","",IF(I${r}<=0,"❌ 缺貨",IF(I${r}<=N${r},"⚠ 補貨","✅")))`,result:st?(st.c==='out'?'❌ 缺貨':st.c==='low'?'⚠ 補貨':'✅'):''};
@@ -1478,12 +1498,13 @@ function buildWorkbook(){
   const wp=wb.addWorksheet('參數設定');wp.columns=[16,8,6,34].map(w=>({width:w}));
   wp.getCell('A1').value='⚙ 參數設定';wp.getCell('A1').font={bold:true,color:{argb:GILT}};
   goldHdr(wp.getRow(3),['參數','數值','單位','說明']);
-  [['蝦皮加價倍率',gp(PKEYS.markup),'','蝦皮定價公式中的加價倍率'],
-   ['蝦皮抽成%',gp(PKEYS.comm),'','蝦皮抽成比例，定價公式會自動反算'],
+  [['蝦皮加價倍率',gp(PKEYS.markup),'','加價層÷10（如 0.6＝6 層）'],
+   ['蝦皮抽成%',gp(PKEYS.comm),'','抽成層÷10（如 0.2＝2 層）'],
    ['蝦皮運費',gp(PKEYS.ship),'元',''],
    ['固定成本',gp(PKEYS.fix),'元','包裝/耗材等固定成本'],
-   ['利潤封頂',gp(PKEYS.cap),'元','建議售價上限=(進價+此值)÷(1-抽成%)'],
-   ['安全庫存(預設)',gp(PKEYS.safe),'件','低於→補貨提醒']].forEach((r,i)=>{wp.getRow(4+i).values=r;});
+   ['利潤封頂',gp(PKEYS.cap),'元','淨利上限'],
+   ['安全庫存(預設)',gp(PKEYS.safe),'件','低於→補貨提醒'],
+   ['證書成本',gp(PKEYS.cert),'元','附證書品項才計入定價']].forEach((r,i)=>{wp.getRow(4+i).values=r;});
 
   // ── 五行對照表 ──
   const wm=wb.addWorksheet('五行對照表');wm.columns=[16,8,10,8,18,12,14].map(w=>({width:w}));
@@ -1502,13 +1523,13 @@ async function exportXlsx(){
   }catch(e){toast('匯出失敗：'+e.message);}
 }
 function exportCsv(){
-  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','功效','安全庫存','補貨','蝦皮連結'];
+  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','淨利','證書','功效','安全庫存','補貨','蝦皮連結'];
   const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
   const rows=[hdr.map(q).join(',')];
   state.items.forEach(it=>{
     const st=stockStatus(it.qty,num(it.safe)??p('safe'));
-    rows.push([it.name,it.element,it.bead,it.wrist,it.ring,it.chain,it.cost,it.qty,it.date,
-      itemShopee(it),itemSuggest(it),it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
+    rows.push([it.name,it.element,it.bead,it.wrist,it.ring,it.chain,effectiveCost(it),it.qty,it.date,
+      itemShopee(it),itemSuggest(it),itemNet(it),it.cert?'是':'否',it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
   });
   const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_庫存_'+dateStamp()+'.csv';a.click();
@@ -1637,6 +1658,7 @@ $('f_name').oninput=()=>{autofillFromName($('f_name').value,false);};
 $('f_name').onchange=()=>{autofillFromName($('f_name').value,true);};
 $('f_cost').oninput=updatePreview;$('f_qty').oninput=updatePreview;$('f_safe').oninput=updatePreview;
 $('f_costauto').onchange=applyCostMode;
+$('f_cert').onchange=updatePreview;
 $('photoPick').onclick=()=>$('photoIn').click();
 $('photoIn').onchange=e=>{if(e.target.files[0]){handlePhotoFile(e.target.files[0]);e.target.value='';}};
 $('photoDel').onclick=removePhoto;
