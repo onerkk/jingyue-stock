@@ -162,7 +162,7 @@
   </div>
 </div>
 
-<div class="credit">雷達 © <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · <span id="verStamp">v8</span></div>
+<div class="credit">雷達 © <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · <span id="verStamp">v9</span></div>
 <button class="fab" id="recenter" aria-label="回到我的位置" title="回到我的位置">◎</button>
 
 <div class="ctrl">
@@ -177,7 +177,7 @@
       <div class="nowmark" id="nowmark"></div>
       <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="雷達時間">
     </div>
-    <div class="rlabels"><span>過去 2 小時</span><span></span><span id="lblNow">最新</span></div>
+    <div class="rlabels"><span id="lblPast">過去 30 分</span><span></span><span id="lblNow">最新</span></div>
     <div class="buttons">
       <button class="step" id="prev" aria-label="上一格">‹</button>
       <button class="play" id="play"><span id="playIcon">▶</span><span id="playTxt">播放</span></button>
@@ -238,6 +238,9 @@
   function buildFrames(data){
     var host=data.host, r=data.radar||{};
     var past=(r.past||[]).map(function(f){return {time:f.time,path:f.path,kind:"past"}});
+    // 只保留最近約半小時（4 格 ≈ 30-40 分），不做 2 小時整段
+    var KEEP=4;
+    if(past.length>KEEP) past=past.slice(-KEEP);
     var now=(r.nowcast||[]).map(function(f){return {time:f.time,path:f.path,kind:"fore"}});
     frames=past.concat(now);
     if(past.length) frames[past.length-1].kind="live"; // 最後一格實測 = 現在
@@ -256,6 +259,9 @@
     var split = frames.length>1 ? (liveAt/(frames.length-1))*100 : 100;
     document.documentElement.style.setProperty("--split", split.toFixed(1)+"%");
     $("slider").max = String(frames.length-1);
+    // 時間軸左標籤：顯示實際涵蓋分鐘數（不再寫死「2 小時」）
+    var spanMin = frames.length>1 ? Math.round((frames[liveAt].time - frames[0].time)/60) : 0;
+    var lp=$("lblPast"); if(lp) lp.textContent = spanMin>0 ? ("過去 "+spanMin+" 分") : "過去";
     // 預設停在「最新」那格（與上方雷達時間對齊）；不自動播，要看移動再按 ▶
     show(liveAt);
     if(playing) play(); // 5 分鐘 refresh 時若正在播放就續播，否則停在最新
@@ -282,7 +288,7 @@
     var hasFore=frames.some(function(f){return f.kind==="fore"});
     var html='<span class="dot" style="background:var(--now)"></span>'
       +'最新雷達 <b>'+(live?hhmm(live.time):"--:--")+'</b> 觀測。';
-    html+=' 按 ▶ 看過去 2 小時移動，判斷往哪走。';
+    html+=' 按 ▶ 看最近半小時移動，判斷往哪走。';
     html+='<br><span style="color:var(--tx3)">雷達只到「現在」（免費版無未來推估）；未來請看下方「降雨機率」（模型估算）。</span>';
     $("verdict").innerHTML=html;
   }
