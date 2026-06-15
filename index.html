@@ -389,6 +389,10 @@
         <input type="checkbox" id="f_cert">
         <span>附證書（定價會加上證書成本）</span>
       </label>
+      <div class="field">
+        <label>實際出售金額 <span class="hint">元；未填則以建議售價估算利潤</span></label>
+        <input id="f_actual" type="number" min="0" inputmode="numeric" placeholder="未填＝建議售價">
+      </div>
 
       <div id="dimGroup">
         <div class="field dim-field" data-field="bead"><label>珠徑 <span class="hint">mm</span></label><input id="f_bead" type="number" inputmode="decimal" placeholder="—"></div>
@@ -440,6 +444,8 @@
       <div class="preview">
         <div class="pv"><span>蝦皮定價</span><b id="pvShopee">—</b></div>
         <div class="pv"><span>建議售價</span><b id="pvSug">—</b></div>
+        <div class="pv"><span>實際出售</span><b id="pvActual">—</b></div>
+        <div class="pv"><span>實拿淨利</span><b id="pvNet">—</b></div>
         <div class="pvst" id="pvStock" style="background:rgba(255,255,255,.05);color:var(--muted)">補貨狀態</div>
       </div>
 
@@ -584,7 +590,7 @@
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="grab"></div>
       <h2>銷售統計</h2>
-      <div class="sub">只統計「賣出」交易。毛利＝售出價 − 售出當下成本。</div>
+      <div class="sub">只統計「賣出」交易。毛利＝實際售出價 − 售出當下成本。</div>
       <div class="seg" id="statPeriod">
         <button class="seg-b on" data-period="month" type="button">本月</button>
         <button class="seg-b" data-period="week" type="button">本週</button>
@@ -690,6 +696,7 @@ function normField(it){
   if(!Array.isArray(it.tags))it.tags=it.tags?[String(it.tags)]:[];
   if(it.costMode!=='auto')it.costMode='manual';
   if(it.photoId===undefined)it.photoId=null;
+  it.actualPrice=num(it.actualPrice);
   it.cert=!!it.cert;
   return it;
 }
@@ -733,8 +740,11 @@ function effectiveCost(it){if(it&&it.costMode==='auto'){const w=wac(it._id);if(w
 function certCostOf(it){return it&&it.cert?p('cert'):0;}
 function itemShopee(it){return shopeePrice(effectiveCost(it),certCostOf(it));}
 function itemSuggest(it){return suggestPrice(effectiveCost(it),certCostOf(it));}
-function itemNet(it){const price=itemSuggest(it),ec=effectiveCost(it);if(price==null||ec==null)return null;
-  return Math.round(price*(1-p('comm'))-p('ship')-p('fix')-certCostOf(it)-ec);}
+function itemActual(it){return num(it&&it.actualPrice);}
+function itemSalePrice(it){const actual=itemActual(it);return actual!==null?actual:itemSuggest(it);}
+function netProfit(price,cost,certCost){const pr=num(price),ec=num(cost);if(pr==null||ec==null)return null;
+  return Math.round(pr*(1-p('comm'))-p('ship')-p('fix')-(certCost||0)-ec);}
+function itemNet(it){return netProfit(itemSalePrice(it),effectiveCost(it),certCostOf(it));}
 
 /* ── photos via IndexedDB (graceful if unavailable) ── */
 let _db=null;
@@ -776,7 +786,7 @@ function deleteTx(txId){
   state.tx=state.tx.filter(x=>x.id!==txId);
   save();renderHistory();render();toast('已刪除交易');
 }
-function quickSell(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'sale',1,itemSuggest(it)??0);}
+function quickSell(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'sale',1,itemSalePrice(it)??0);}
 function quickBuy(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'buy',1,effectiveCost(it)??0);}
 
 /* ───────── five-element colors / form fields ───────── */
@@ -822,14 +832,14 @@ function renderStatsDetail(){
   $('statsToggle').textContent='庫存明細 '+(state.statsOpen?'▴':'▾');
   if(!state.statsOpen){$('statsDetail').style.display='none';return;}
   $('statsDetail').style.display='block';
-  let cost=0,retail=0;const byElem={};
-  state.items.forEach(it=>{const c=effectiveCost(it)??0,q=num(it.qty)??0,sale=itemSuggest(it)??0;
-    cost+=c*q;retail+=sale*q;const k=primaryElem(it.element);byElem[k]=(byElem[k]||0)+1;});
+  let cost=0,retail=0,profit=0;const byElem={};
+  state.items.forEach(it=>{const c=effectiveCost(it)??0,q=num(it.qty)??0,sale=itemSalePrice(it)??0,net=itemNet(it)??0;
+    cost+=c*q;retail+=sale*q;profit+=net*q;const k=primaryElem(it.element);byElem[k]=(byElem[k]||0)+1;});
   const order=['金','木','水','火','土','多元','其他'].filter(k=>byElem[k]);
   const max=Math.max(...order.map(k=>byElem[k]),1);
   const bars=order.map(k=>{const col=elemColor(k),w=Math.round(byElem[k]/max*100);
     return `<div class="bar-row"><span class="bl" style="color:${col}">${k}</span><span class="bt"><span class="bf" style="width:${w}%;background:${col}"></span></span><span class="bn">${byElem[k]}</span></div>`;}).join('');
-  $('statsDetail').innerHTML=`<div class="sd-vals"><div><span>零售總值</span><b>${fmt(retail)}</b></div><div><span>預估毛利</span><b style="color:var(--ok)">${fmt(retail-cost)}</b></div></div>${bars}`;
+  $('statsDetail').innerHTML=`<div class="sd-vals"><div><span>銷售總值</span><b>${fmt(retail)}</b></div><div><span>預估淨利</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b></div></div>${bars}`;
 }
 function renderChips(){
   const order=['金','木','水','火','土','多元','其他'];
@@ -856,9 +866,9 @@ function specHtml(it){
 }
 function cardHtml(it){
   const col=elemColor(it.element);
-  const sale=itemSuggest(it), shop=itemShopee(it), ec=effectiveCost(it), net=itemNet(it);
+  const sale=itemSuggest(it), actual=itemActual(it), sell=itemSalePrice(it), shop=itemShopee(it), ec=effectiveCost(it), net=itemNet(it);
   const st=stockStatus(it.qty,num(it.safe)??p('safe'));
-  const saleHtml=sale!=null?`<span class="pill sale">售 ${fmt(sale)}</span>`:'';
+  const saleHtml=sell!=null?`<span class="pill sale">${actual!==null?'實售':'建議'} ${fmt(sell)}</span>`:'';
   const costHtml=ec!=null?`<span class="pill cost">進 ${fmt(ec)}${it.costMode==='auto'?' 均':''}</span>`:'';
   const netHtml=net!=null?`<span class="pill net" style="color:${net>=0?'var(--ok)':'var(--out)'};background:${net>=0?'rgba(95,184,122,.12)':'rgba(224,100,79,.12)'}">淨 ${fmt(net)}</span>`:'';
   const certHtml=it.cert?`<span class="pill" style="color:var(--gilt);background:rgba(201,162,39,.1)">證</span>`:'';
@@ -870,7 +880,8 @@ function cardHtml(it){
       ${it.photoId?`<img class="exp-photo" data-photo="${esc(it.photoId)}" alt="">`:''}
       <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.cert?' <span style="opacity:.3">·</span> 附證書':''}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
       <div class="exp-price">蝦皮定價 <b>${shop!=null?fmt(shop):'—'}</b> ｜ 建議售價 <b>${sale!=null?fmt(sale):'—'}</b></div>
-      <div class="exp-price" style="margin-top:2px">實拿淨利 <b style="color:${net>=0?'var(--ok)':'var(--out)'}">${net!=null?fmt(net):'—'}</b> <span style="color:var(--muted2);font-size:.85em">（扣蝦皮抽成/運費/固定${it.cert?'/證書':''}後）</span></div>
+      <div class="exp-price" style="margin-top:2px">實際出售 <b>${actual!==null?fmt(actual):'未設定'}</b> ｜ 實拿淨利 <b style="color:${net>=0?'var(--ok)':'var(--out)'}">${net!=null?fmt(net):'—'}</b></div>
+      <div class="exp-price" style="margin-top:2px;color:var(--muted2);font-size:.85em">${actual!==null?'依實際出售金額':'未填實售金額，暫以建議售價'}計算；已扣蝦皮抽成/運費/固定${it.cert?'/證書':''}</div>
       <div class="exp-actions">
         <button class="xb minus" data-act="sell" data-id="${it._id}">賣 1</button>
         <span class="xqty">庫存 ${num(it.qty)??0}</span>
@@ -996,9 +1007,13 @@ function autofillFromName(name,force){
 function updatePreview(){
   const cost=$('f_cost').value;
   const cc=$('f_cert')&&$('f_cert').checked?p('cert'):0;
-  const sh=shopeePrice(cost,cc), sg=suggestPrice(cost,cc);
+  const sh=shopeePrice(cost,cc), sg=suggestPrice(cost,cc), actual=num($('f_actual').value);
+  const sell=actual!==null?actual:sg, net=netProfit(sell,cost,cc);
   $('pvShopee').textContent=sh!=null?fmt(sh):'—';
   $('pvSug').textContent=sg!=null?fmt(sg):'—';
+  $('pvActual').textContent=actual!==null?fmt(actual):'未設定';
+  $('pvNet').textContent=net!=null?fmt(net):'—';
+  $('pvNet').style.color=net==null?'var(--gilt)':(net>=0?'var(--ok)':'var(--out)');
   const st=stockStatus($('f_qty').value, $('f_safe').value!==''?$('f_safe').value:p('safe'));
   const el=$('pvStock');
   if(st){el.textContent=st.t==='充足'?'庫存充足':(st.t==='缺貨'?'缺貨':'需補貨');
@@ -1015,7 +1030,7 @@ function openSheet(item){
   const g=v=>v==null?'':v;
   $('f_name').value=item?item.name:'';
   fillElemOptions(item?item.element:'');
-  $('f_cost').value=g(item&&item.cost); $('f_qty').value=g(item&&item.qty);
+  $('f_cost').value=g(item&&item.cost); $('f_actual').value=g(item&&item.actualPrice); $('f_qty').value=g(item&&item.qty);
   $('f_bead').value=g(item&&item.bead); $('f_wrist').value=g(item&&item.wrist);
   $('f_ring').value=g(item&&item.ring); $('f_chain').value=g(item&&item.chain);
   $('f_safe').value=item?g(item.safe):'';
@@ -1062,7 +1077,7 @@ function openSheet(item){
   const g=v=>v==null?'':v;
   $('f_name').value=item?item.name:'';
   fillElemOptions(item?item.element:'');
-  $('f_cost').value=g(item&&item.cost); $('f_qty').value=g(item&&item.qty);
+  $('f_cost').value=g(item&&item.cost); $('f_actual').value=g(item&&item.actualPrice); $('f_qty').value=g(item&&item.qty);
   $('f_bead').value=g(item&&item.bead); $('f_wrist').value=g(item&&item.wrist);
   $('f_ring').value=g(item&&item.ring); $('f_chain').value=g(item&&item.chain);
   $('f_safe').value=item?g(item.safe):'';
@@ -1091,7 +1106,7 @@ function collect(){
   else{const it=state.editId?state.items.find(x=>x._id===state.editId):null;cost=it?num(it.cost):n('f_cost');}
   const tags=v('f_tags').split(/[,，]/).map(s=>s.trim()).filter(Boolean);
   return{name:v('f_name'),element:$('f_elem').value||null,bead:n('f_bead'),wrist:n('f_wrist'),
-    ring:n('f_ring'),chain:n('f_chain'),cost:cost,qty:n('f_qty'),
+    ring:n('f_ring'),chain:n('f_chain'),cost:cost,actualPrice:n('f_actual'),qty:n('f_qty'),
     safe:$('f_safe').value.trim()===''?null:Number($('f_safe').value),
     date:$('f_date').value||null,efficacy:v('f_eff')||null,link:v('f_link')||null,
     tags:tags,costMode:costMode,photoId:state.photoTmp??null,cert:$('f_cert').checked};
@@ -1140,8 +1155,8 @@ function openTx(itemId){const it=state.items.find(x=>x._id===itemId);if(!it)retu
 function setTxType(type){state.txType=type;
   document.querySelectorAll('#txTypeSeg .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.tx===type));
   const it=state.items.find(x=>x._id===state.txItemId);
-  if(type==='sale'){$('txTitle').textContent='記一筆 · 賣出';$('txPriceLabel').innerHTML='售出單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSuggest(it)??''):'';}
-  else if(type==='return'){$('txTitle').textContent='記一筆 · 退貨';$('txPriceLabel').innerHTML='退款單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSuggest(it)??''):'';}
+  if(type==='sale'){$('txTitle').textContent='記一筆 · 賣出';$('txPriceLabel').innerHTML='售出單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSalePrice(it)??''):'';}
+  else if(type==='return'){$('txTitle').textContent='記一筆 · 退貨';$('txPriceLabel').innerHTML='退款單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSalePrice(it)??''):'';}
   else{$('txTitle').textContent='記一筆 · 進貨';$('txPriceLabel').innerHTML='進貨單價 <span class="hint">元</span>';$('tx_price').value=it?(effectiveCost(it)??''):'';}
   updateTxPrev();}
 function updateTxPrev(){const q=num($('tx_qty').value)??0,pr=num($('tx_price').value)??0;
@@ -1228,14 +1243,14 @@ function renderHealth(){
     .filter(x=>x.d===null||x.d>=30)
     .sort((a,b)=>{if(a.d===null&&b.d===null)return b.cap-a.cap;if(a.d===null)return -1;if(b.d===null)return 1;return b.d-a.d;});
   const deadCap=dead.reduce((s,x)=>s+x.cap,0);
-  const lowM=state.items.map(it=>{const sp=itemSuggest(it),ec=effectiveCost(it);const m=(sp&&sp>0&&ec!=null)?Math.round((sp-ec)/sp*100):null;return{it,sp,ec,m};})
+  const lowM=state.items.map(it=>{const sp=itemSalePrice(it),ec=effectiveCost(it);const m=(sp&&sp>0&&ec!=null)?Math.round((sp-ec)/sp*100):null;return{it,sp,ec,m};})
     .filter(x=>x.m!=null&&x.m<25).sort((a,b)=>a.m-b.m);
   const restock=state.items.map(it=>{const q=num(it.qty)??0,safe=num(it.safe)??p('safe'),st=stockStatus(q,safe);const need=Math.max((safe||0)+3-q,1);return{it,q,safe,st,ec:effectiveCost(it)??0,need};})
     .filter(x=>x.st&&x.st.c!=='ok').sort((a,b)=>a.q-b.q);
   const restockCost=restock.reduce((s,x)=>s+x.need*x.ec,0);
   const sec=(title,extra,rows,empty)=>`<div class="stat-sec">${title}${extra?`<span style="float:right;font-weight:400;color:var(--muted)">${extra}</span>`:''}</div>${rows||`<div class="empty" style="padding:20px"><b>${empty}</b></div>`}`;
   const deadRows=dead.slice(0,30).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">${x.d===null?'從未售出':x.d+' 天沒賣'} · 庫存 ${num(x.it.qty)??0}</span><span class="hcap">壓 ${fmt(x.cap)}</span></div>`).join('');
-  const lowRows=lowM.slice(0,30).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">成本 ${fmt(x.ec)} → 售 ${fmt(x.sp)}</span><span class="hcap" style="color:var(--out)">${x.m}%</span></div>`).join('');
+  const lowRows=lowM.slice(0,30).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">成本 ${fmt(x.ec)} → ${itemActual(x.it)!==null?'實售':'建議'} ${fmt(x.sp)}</span><span class="hcap" style="color:var(--out)">${x.m}%</span></div>`).join('');
   const reRows=restock.slice(0,40).map(x=>`<div class="hrow"><span class="hn">${esc(x.it.name)}</span><span class="hsub">${x.st.t} · 現 ${x.q}/安全 ${x.safe}</span><span class="hcap">補≈${fmt(x.need*x.ec)}</span></div>`).join('');
   $('healthBody').innerHTML=`
     <div class="hsummary">滯銷壓貨 <b>${fmt(deadCap)}</b>（${dead.length} 項）　·　待補貨預估 <b>${fmt(restockCost)}</b>（${restock.length} 項）</div>
@@ -1382,7 +1397,7 @@ function dataURLtoBlob(d){const a=String(d).split(',');const mime=(a[0].match(/:
 async function backupJson(){
   const photos={};
   for(const it of state.items){if(it.photoId){try{const b=await getPhoto(it.photoId);if(b)photos[it.photoId]=await blobToDataURL(b);}catch(e){}}}
-  const payload={_meta:{app:'jingyue-inv',ver:'v7',exported:new Date().toISOString(),items:state.items.length,tx:state.tx.length,photos:Object.keys(photos).length},
+  const payload={_meta:{app:'jingyue-inv',ver:'v8',exported:new Date().toISOString(),items:state.items.length,tx:state.tx.length,photos:Object.keys(photos).length},
     items:state.items,lookup:state.lookup,params:state.params,tx:state.tx,photos:photos};
   const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_備份_'+dateStamp()+'.json';a.click();
@@ -1391,7 +1406,7 @@ async function backupJson(){
 }
 function normItem(it){return {_id:it._id||uid(),name:String(it.name||'').trim(),element:(it.element??null)||null,
   bead:num(it.bead),wrist:num(it.wrist),ring:num(it.ring),chain:num(it.chain),
-  cost:num(it.cost),qty:num(it.qty),date:it.date?String(it.date).slice(0,10):null,
+  cost:num(it.cost),actualPrice:num(it.actualPrice),qty:num(it.qty),date:it.date?String(it.date).slice(0,10):null,
   efficacy:(it.efficacy??null)||null,safe:num(it.safe),link:(it.link??null)||null,
   tags:Array.isArray(it.tags)?it.tags.map(t=>String(t).trim()).filter(Boolean):[],
   costMode:it.costMode==='auto'?'auto':'manual',photoId:it.photoId||null,cert:!!it.cert};}
@@ -1439,20 +1454,20 @@ function buildWorkbook(){
 
   // ── 進銷總表 (gilt title + header, formulas) ──
   const ws=wb.addWorksheet('進銷總表',{views:[{state:'frozen',ySplit:3}]});
-  ws.columns=[5,18,8,7,7,7,7,8,7,13,10,10,20,9,9,44].map(w=>({width:w}));
-  ws.mergeCells('A1:P1');const t=ws.getCell('A1');t.value='✦ 靜月之光 — 水晶庫存管理 ✦';
+  ws.columns=[5,18,8,7,7,7,7,8,7,13,10,10,11,10,20,9,9,44].map(w=>({width:w}));
+  ws.mergeCells('A1:R1');const t=ws.getCell('A1');t.value='✦ 靜月之光 — 水晶庫存管理 ✦';
   t.font={bold:true,size:15,color:{argb:GILT}};t.alignment={horizontal:'center',vertical:'middle'};t.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};ws.getRow(1).height=30;
-  ws.mergeCells('A2:P2');const s2=ws.getCell('A2');s2.value=`📦 ${state.items.length} 件    🔴 需補貨 ${need}    💰 庫存成本 $${cost.toLocaleString('en-US')}`;
+  ws.mergeCells('A2:R2');const s2=ws.getCell('A2');s2.value=`📦 ${state.items.length} 件    🔴 需補貨 ${need}    💰 庫存成本 $${cost.toLocaleString('en-US')}`;
   s2.font={size:12,color:{argb:SOFT}};s2.alignment={horizontal:'center',vertical:'middle'};s2.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK2}};ws.getRow(2).height=22;
-  goldHdr(ws.getRow(3),['#','品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','功效','安全庫存','補貨','蝦皮連結']);
+  goldHdr(ws.getRow(3),['#','品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','實際出售金額','實拿淨利','功效','安全庫存','補貨','蝦皮連結']);
   const EDARK={'金':'FFB7791F','木':'FF2E7D46','水':'FF2C6FB0','火':'FFC0392B','土':'FF9A6B1E','多元':'FF7A4FB0','其他':'FF555555'};
   const exItems=[...state.items].sort(elemThenName);
   const gcount={};exItems.forEach(it=>{const g=primaryElem(it.element);gcount[g]=(gcount[g]||0)+1;});
-  let xr=4, idx=0, prevG=null, retail=0;
+  let xr=4, idx=0, prevG=null, retail=0,profit=0;
   exItems.forEach((it)=>{
     const g=primaryElem(it.element);
     if(g!==prevG){
-      ws.mergeCells(`A${xr}:P${xr}`);
+      ws.mergeCells(`A${xr}:R${xr}`);
       const gc=ws.getCell(`A${xr}`);
       gc.value=`　▎${g}　（${gcount[g]} 件）`;
       gc.font={bold:true,size:12,color:{argb:EDARK[g]||'FF555555'}};
@@ -1468,22 +1483,24 @@ function buildWorkbook(){
     if(it.date){row.getCell(10).value=new Date(it.date);row.getCell(10).numFmt='yyyy-mm-dd';}
     row.getCell(11).value={formula:`IF(H${r}="","",CEILING((H${r}*(1+參數設定!$B$4)+參數設定!$B$7+參數設定!$B$6${it.cert?'+參數設定!$B$10':''})/(1-參數設定!$B$5),1))`,result:itemShopee(it)};
     row.getCell(12).value={formula:`IF(H${r}="","",MIN(K${r},CEILING((H${r}+參數設定!$B$8+參數設定!$B$7+參數設定!$B$6${it.cert?'+參數設定!$B$10':''})/(1-參數設定!$B$5),1)))`,result:itemSuggest(it)};
-    row.getCell(13).value=it.efficacy||'';row.getCell(14).value=num(it.safe)??gp(PKEYS.safe);
+    row.getCell(13).value=itemActual(it);
+    row.getCell(14).value={formula:`IF(H${r}="","",ROUND(IF(M${r}="",L${r},M${r})*(1-參數設定!$B$5)-參數設定!$B$6-參數設定!$B$7${it.cert?'-參數設定!$B$10':''}-H${r},0))`,result:itemNet(it)};
+    row.getCell(15).value=it.efficacy||'';row.getCell(16).value=num(it.safe)??gp(PKEYS.safe);
     const st=stockStatus(it.qty,num(it.safe)??gp(PKEYS.safe));
-    row.getCell(15).value={formula:`IF(I${r}="","",IF(I${r}<=0,"❌ 缺貨",IF(I${r}<=N${r},"⚠ 補貨","✅")))`,result:st?(st.c==='out'?'❌ 缺貨':st.c==='low'?'⚠ 補貨':'✅'):''};
-    if(it.link)row.getCell(16).value={text:it.link,hyperlink:it.link};
-    retail+=(itemSuggest(it)??0)*(num(it.qty)??0);
+    row.getCell(17).value={formula:`IF(I${r}="","",IF(I${r}<=0,"❌ 缺貨",IF(I${r}<=P${r},"⚠ 補貨","✅")))`,result:st?(st.c==='out'?'❌ 缺貨':st.c==='low'?'⚠ 補貨':'✅'):''};
+    if(it.link)row.getCell(18).value={text:it.link,hyperlink:it.link};
+    retail+=(itemSalePrice(it)??0)*(num(it.qty)??0);profit+=(itemNet(it)??0)*(num(it.qty)??0);
     let rf=null,oc=null;
     if(st&&st.c==='out'){rf='FFF7E4E0';oc='FFC0392B';}
     else if(st&&st.c==='low'){rf='FFFAF1DD';oc='FFB7791F';}
     else if(idx%2===0){rf='FFF6F4EF';}
-    if(rf)for(let cc=1;cc<=16;cc++){row.getCell(cc).fill={type:'pattern',pattern:'solid',fgColor:{argb:rf}};}
-    if(oc)row.getCell(15).font={color:{argb:oc},bold:true};
+    if(rf)for(let cc=1;cc<=18;cc++){row.getCell(cc).fill={type:'pattern',pattern:'solid',fgColor:{argb:rf}};}
+    if(oc)row.getCell(17).font={color:{argb:oc},bold:true};
     xr++;
   });
-  ws.mergeCells(`A${xr}:P${xr}`);
+  ws.mergeCells(`A${xr}:R${xr}`);
   const sumc=ws.getCell(`A${xr}`);
-  sumc.value=`合計　${idx} 件　｜　庫存成本 $${cost.toLocaleString('en-US')}　｜　零售總值 $${retail.toLocaleString('en-US')}　｜　預估毛利 $${(retail-cost).toLocaleString('en-US')}`;
+  sumc.value=`合計　${idx} 件　｜　庫存成本 $${cost.toLocaleString('en-US')}　｜　銷售總值 $${retail.toLocaleString('en-US')}　｜　預估淨利 $${profit.toLocaleString('en-US')}`;
   sumc.font={bold:true,color:{argb:GILT}};sumc.alignment={vertical:'middle'};
   sumc.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};sumc.border={top:{style:'double',color:{argb:GOLD}}};
   ws.getRow(xr).height=24;
@@ -1523,13 +1540,13 @@ async function exportXlsx(){
   }catch(e){toast('匯出失敗：'+e.message);}
 }
 function exportCsv(){
-  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','淨利','證書','功效','安全庫存','補貨','蝦皮連結'];
+  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','實際出售金額','淨利','證書','功效','安全庫存','補貨','蝦皮連結'];
   const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
   const rows=[hdr.map(q).join(',')];
   state.items.forEach(it=>{
     const st=stockStatus(it.qty,num(it.safe)??p('safe'));
     rows.push([it.name,it.element,it.bead,it.wrist,it.ring,it.chain,effectiveCost(it),it.qty,it.date,
-      itemShopee(it),itemSuggest(it),itemNet(it),it.cert?'是':'否',it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
+      itemShopee(it),itemSuggest(it),itemActual(it),itemNet(it),it.cert?'是':'否',it.efficacy,num(it.safe)??p('safe'),st?st.t:'',it.link].map(q).join(','));
   });
   const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_庫存_'+dateStamp()+'.csv';a.click();
@@ -1554,7 +1571,7 @@ async function importXlsx(file){
     const items=[];
     for(let r=hr+1;r<=ws.rowCount;r++){const row=ws.getRow(r);const nm=String(cellVal(g(row,'品項名稱'))).trim();if(!nm)continue;
       items.push({_id:uid(),name:nm,element:sv(g(row,'五行')),bead:ni(g(row,'珠徑')),wrist:ni(g(row,'手圍')),ring:ni(g(row,'戒圍')),chain:ni(g(row,'鍊長')),
-        cost:ni(g(row,'進價')),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
+        cost:ni(g(row,'進價')),actualPrice:ni(g(row,'實際出售金額')),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
     if(!items.length){toast('進銷總表沒有讀到品項');return;}
     items.forEach(normField);
     state.items=items;
@@ -1656,7 +1673,7 @@ $('stNeedBox').onclick=()=>{state.lowOnly=!state.lowOnly;savePrefs();render();};
 $('statsToggle').onclick=()=>{state.statsOpen=!state.statsOpen;savePrefs();renderStatsDetail();};
 $('f_name').oninput=()=>{autofillFromName($('f_name').value,false);};
 $('f_name').onchange=()=>{autofillFromName($('f_name').value,true);};
-$('f_cost').oninput=updatePreview;$('f_qty').oninput=updatePreview;$('f_safe').oninput=updatePreview;
+$('f_cost').oninput=updatePreview;$('f_actual').oninput=updatePreview;$('f_qty').oninput=updatePreview;$('f_safe').oninput=updatePreview;
 $('f_costauto').onchange=applyCostMode;
 $('f_cert').onchange=updatePreview;
 $('photoPick').onclick=()=>$('photoIn').click();
@@ -1730,7 +1747,19 @@ $('groupBtn').classList.toggle('on',state.group);
 load();render();
 openDeepLink();
 if(cloud.on){initCloud().catch(e=>cloudStatus('自動連線失敗：'+(e.message||e),'#e0644f'));}
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
+if('serviceWorker' in navigator){
+  let _swRefreshing=false;
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+      reg.update().catch(()=>{});
+    }).catch(()=>{});
+  });
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(_swRefreshing)return;
+    _swRefreshing=true;
+    location.reload();
+  });
+}
 </script>
 </body>
 </html>
