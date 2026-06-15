@@ -235,20 +235,67 @@
   .seg{display:flex;background:rgba(255,255,255,.04);border:1px solid var(--line2);border-radius:11px;padding:3px;margin-bottom:13px}
   .seg-b{flex:1;border:0;background:none;color:var(--muted);font-size:14px;padding:9px;border-radius:8px;cursor:pointer;font-weight:500}
   .seg-b.on{background:rgba(201,162,39,.16);color:var(--gilt)}
-  .txprev{background:rgba(201,162,39,.06);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin:2px 0 14px;font-size:13.5px;color:var(--goldtxt);min-height:20px}
+  .txprev{background:linear-gradient(145deg,rgba(201,162,39,.09),rgba(255,255,255,.025));border:1px solid var(--line);border-radius:14px;padding:14px;margin:5px 0 15px;color:var(--goldtxt);min-height:20px;box-shadow:inset 0 1px rgba(255,255,255,.025)}
+  .tx-sheet{padding-left:17px;padding-right:17px}
+  .tx-head{display:flex;align-items:flex-start;gap:12px;margin:0 1px 10px}
+  .tx-headmain{flex:1;min-width:0}
+  .tx-kicker{font-size:10.5px;letter-spacing:.18em;color:var(--muted);margin-bottom:4px}
+  .tx-head h2{margin:0;font-size:20px;letter-spacing:.05em}
+  .tx-stockpill{flex:0 0 auto;border:1px solid var(--line);background:rgba(201,162,39,.08);color:var(--gilt);border-radius:999px;padding:7px 11px;font-size:12px;font-variant-numeric:tabular-nums}
+  .tx-product{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.035);border:1px solid var(--line2);border-radius:14px;padding:12px 13px;margin-bottom:13px}
+  .tx-product-main{flex:1;min-width:0}
+  .tx-product-name{font-size:15px;font-weight:650;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tx-product-meta{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .tx-product-price{text-align:right;flex:0 0 auto}
+  .tx-product-price span{display:block;font-size:10.5px;color:var(--muted)}
+  .tx-product-price b{display:block;font-size:16px;color:var(--gilt);font-variant-numeric:tabular-nums;margin-top:2px}
+  .req{color:var(--out);margin-left:2px}
+  .tx-pricechips{display:flex;gap:7px;flex-wrap:wrap;margin:-4px 0 13px}
+  .tx-pricechip{border:1px solid var(--line2);background:rgba(255,255,255,.035);color:var(--muted);border-radius:999px;padding:6px 10px;font-size:11.5px;cursor:pointer}
+  .tx-pricechip:active,.tx-pricechip.on{border-color:var(--gold);color:var(--gilt);background:rgba(201,162,39,.10)}
+  .tx-feetoggle{width:100%;display:flex;align-items:center;gap:8px;border:1px dashed var(--line);background:rgba(201,162,39,.035);color:var(--goldtxt);border-radius:11px;padding:10px 12px;font-size:12.5px;cursor:pointer;margin:-1px 0 11px;text-align:left}
+  .tx-feetoggle .arr{margin-left:auto;color:var(--muted);transition:transform .18s}
+  .tx-feetoggle.open .arr{transform:rotate(180deg)}
+  .tx-feepanel{background:rgba(255,255,255,.025);border:1px solid var(--line2);border-radius:13px;padding:12px;margin:-4px 0 13px}
+  .tx-feegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tx-feegrid .field{margin:0}
+  .tx-feeactions{display:flex;justify-content:flex-end;margin-top:10px}
+  .tx-feeauto{border:0;background:none;color:var(--gilt);font-size:11.5px;padding:3px 0;cursor:pointer}
+  .tx-sumtop{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:11px;border-bottom:1px solid var(--line2)}
+  .tx-sumtop span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+  .tx-sumtop b{font-size:22px;color:var(--gilt);font-variant-numeric:tabular-nums}
+  .tx-stockafter{text-align:right;font-size:11.5px;color:var(--muted)}
+  .tx-stockafter strong{display:block;font-size:15px;color:var(--txt);margin-top:3px;font-variant-numeric:tabular-nums}
+  .tx-sumgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px}
+  .tx-sumcell{background:rgba(255,255,255,.035);border-radius:9px;padding:8px 7px;text-align:center}
+  .tx-sumcell span{display:block;font-size:10px;color:var(--muted);margin-bottom:3px}
+  .tx-sumcell b{font-size:13px;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .tx-alert{margin-top:10px;border-radius:9px;padding:8px 10px;font-size:11.5px;line-height:1.5}
+  .tx-alert.good{background:rgba(95,184,122,.10);color:var(--ok)}
+  .tx-alert.warn{background:rgba(224,162,63,.12);color:var(--low)}
+  .tx-alert.bad{background:rgba(224,100,79,.12);color:var(--out)}
+  .xb.sell{color:#241c07;border-color:rgba(232,207,134,.55);background:linear-gradient(150deg,var(--gilt),var(--gold));font-weight:700;padding-left:15px;padding-right:15px}
+  .xb.buy{color:var(--shui);border-color:rgba(74,144,217,.35);background:rgba(74,144,217,.09)}
+  .xb:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.35)}
+  .xqty.stockpill{border:1px solid var(--line2);border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.035);min-width:auto}
   /* ── tag pills on card ── */
   .tagrow{margin-top:5px;display:flex;flex-wrap:wrap;gap:5px}
   .tpill{font-size:10.5px;color:var(--goldtxt);background:rgba(201,162,39,.10);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
   /* ── history rows ── */
-  .hisrow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;margin-bottom:7px;font-size:13px}
-  .hisrow .ht{font-weight:600;padding:2px 8px;border-radius:6px;font-size:11.5px}
+  .hisrow{display:flex;align-items:flex-start;gap:10px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:11px 12px;margin-bottom:8px;font-size:13px}
+  .hisrow .ht{font-weight:650;padding:3px 8px;border-radius:7px;font-size:11px;flex:0 0 auto}
   .hisrow .ht.sale{background:rgba(95,184,122,.14);color:var(--ok)}
   .hisrow .ht.buy{background:rgba(74,144,217,.14);color:var(--shui)}
   .hisrow .ht.adjust{background:rgba(255,255,255,.06);color:var(--muted)}
   .hisrow .ht.return{background:rgba(224,100,79,.14);color:var(--out)}
-  .hisrow .hd{color:var(--muted);font-size:12px}
-  .hisrow .hv{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--txt)}
-  .hisrow .hdel{border:0;background:none;color:var(--out);font-size:15px;cursor:pointer;opacity:.6;padding:0 2px}
+  .hisrow .hbody{flex:1;min-width:0}
+  .hisrow .hline{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;color:var(--txt)}
+  .hisrow .hline b{font-variant-numeric:tabular-nums}
+  .hisrow .hd{color:var(--muted);font-size:11.5px;line-height:1.45;margin-top:4px;overflow-wrap:anywhere}
+  .hisrow .hside{text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .hisrow .hside b{display:block;color:var(--txt);font-size:13px}
+  .hisrow .hside span{display:block;font-size:10.5px;margin-top:4px}
+  .hisrow .hdel{border:0;background:none;color:var(--out);font-size:15px;cursor:pointer;opacity:.6;padding:1px 0 0 2px;flex:0 0 auto}
   /* ── stats body ── */
   .stat-big{display:flex;gap:9px;margin-bottom:12px}
   .stat-big>div{flex:1;background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:11px 8px;text-align:center}
@@ -296,6 +343,11 @@
   .synccode{display:flex;gap:8px;align-items:center}
   .synccode input{flex:1;font-variant-numeric:tabular-nums;letter-spacing:.06em}
   textarea.cfg{min-height:84px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.45}
+  @media(max-width:390px){
+    .tx-sheet .row2{flex-direction:column;gap:0}
+    .tx-feegrid{grid-template-columns:1fr 1fr}
+    .tx-product-price{display:none}
+  }
 </style>
 </head>
 <body>
@@ -390,7 +442,7 @@
         <span>附證書（定價會加上證書成本）</span>
       </label>
       <div class="field">
-        <label>實際出售金額 <span class="hint">元；未填則以建議售價估算利潤</span></label>
+        <label>預設成交價 <span class="hint">元；只用於賣貨時預填，每筆可修改</span></label>
         <input id="f_actual" type="number" min="0" inputmode="numeric" step="1" placeholder="未填＝建議售價">
       </div>
 
@@ -444,7 +496,7 @@
       <div class="preview">
         <div class="pv"><span>蝦皮定價</span><b id="pvShopee">—</b></div>
         <div class="pv"><span>建議售價</span><b id="pvSug">—</b></div>
-        <div class="pv"><span>實際出售</span><b id="pvActual">—</b></div>
+        <div class="pv"><span>預設成交</span><b id="pvActual">—</b></div>
         <div class="pv"><span>實拿淨利</span><b id="pvNet">—</b></div>
         <div class="pvst" id="pvStock" style="background:rgba(255,255,255,.05);color:var(--muted)">補貨狀態</div>
       </div>
@@ -551,25 +603,94 @@
 
   <!-- Transaction dialog -->
   <div class="backdrop" id="txBackdrop">
-    <div class="sheet" role="dialog" aria-modal="true" style="max-width:430px">
+    <div class="sheet tx-sheet" role="dialog" aria-modal="true" style="max-width:470px">
       <div class="grab"></div>
-      <h2 id="txTitle">記一筆</h2>
-      <div class="sub" id="txItemName"></div>
+      <div class="tx-head">
+        <div class="tx-headmain">
+          <div class="tx-kicker">INVENTORY TRANSACTION</div>
+          <h2 id="txTitle">新增銷售紀錄</h2>
+        </div>
+        <div class="tx-stockpill" id="txStockPill">庫存 0</div>
+      </div>
+
+      <div class="tx-product">
+        <div class="tx-product-main">
+          <div class="tx-product-name" id="txItemName"></div>
+          <div class="tx-product-meta" id="txItemMeta"></div>
+        </div>
+        <div class="tx-product-price">
+          <span>建議售價</span>
+          <b id="txItemSuggest">—</b>
+        </div>
+      </div>
+
       <div class="seg" id="txTypeSeg">
         <button class="seg-b on" data-tx="sale" type="button">賣出</button>
         <button class="seg-b" data-tx="buy" type="button">進貨</button>
         <button class="seg-b" data-tx="return" type="button">退貨</button>
       </div>
+
       <div class="row2">
-        <div class="field"><label>數量 <span class="hint">件</span></label><input id="tx_qty" type="number" inputmode="numeric" value="1"></div>
-        <div class="field"><label id="txPriceLabel">單價 <span class="hint">元</span></label><input id="tx_price" type="number" inputmode="numeric" step="1" placeholder="0"></div>
+        <div class="field"><label>數量 <span class="req">＊</span><span class="hint"> 件</span></label><input id="tx_qty" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
+        <div class="field"><label id="txPriceLabel">實際售出單價 <span class="req">＊</span><span class="hint"> 元</span></label><input id="tx_price" type="number" inputmode="numeric" min="0" step="10" placeholder="0"></div>
       </div>
-      <div class="field"><label>日期</label><input id="tx_date" type="date"></div>
-      <div class="field"><label>備註 <span class="hint">選填</span></label><input id="tx_note" placeholder="買家 / 通路 / 備註"></div>
+      <div class="tx-pricechips" id="txPriceQuick"></div>
+
+      <div class="row2">
+        <div class="field">
+          <label id="txChannelLabel">銷售通路 <span class="req">＊</span></label>
+          <select id="tx_channel">
+            <option value="蝦皮">蝦皮</option>
+            <option value="LINE">LINE</option>
+            <option value="Facebook">Facebook</option>
+            <option value="Instagram / Threads">Instagram / Threads</option>
+            <option value="面交">面交</option>
+            <option value="親友">親友</option>
+            <option value="市集 / 活動">市集 / 活動</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="field tx-sale-only" id="txPromoWrap">
+          <label>成交方式 <span class="hint">選填</span></label>
+          <select id="tx_promo">
+            <option value="">一般成交</option>
+            <option value="活動折扣">活動折扣</option>
+            <option value="優惠券">優惠券</option>
+            <option value="議價">議價</option>
+            <option value="組合價">組合價</option>
+            <option value="贈品搭售">贈品搭售</option>
+            <option value="其他優惠">其他優惠</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="txChannelOtherWrap" style="display:none">
+        <label>其他通路名稱 <span class="req">＊</span></label>
+        <input id="tx_channel_other" placeholder="例：官網、社團、現場活動">
+      </div>
+
+      <div class="row2">
+        <div class="field"><label id="txRefLabel">買家／訂單編號 <span class="hint">選填</span></label><input id="tx_ref" placeholder="例：蝦皮訂單末 6 碼"></div>
+        <div class="field"><label>交易日期 <span class="req">＊</span></label><input id="tx_date" type="date"></div>
+      </div>
+
+      <button class="tx-feetoggle" id="txFeeToggle" type="button">
+        <span>費用明細</span><small id="txFeeBrief">自動依通路帶入</small><span class="arr">⌄</span>
+      </button>
+      <div class="tx-feepanel" id="txFeePanel" style="display:none">
+        <div class="tx-feegrid">
+          <div class="field"><label>平台／金流費 <span class="hint">元</span></label><input id="tx_platform_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
+          <div class="field"><label>運費補貼 <span class="hint">元</span></label><input id="tx_shipping_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
+          <div class="field"><label>包材／固定成本 <span class="hint">元</span></label><input id="tx_fixed_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
+          <div class="field"><label>其他成本 <span class="hint">元</span></label><input id="tx_other_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
+        </div>
+        <div class="tx-feeactions"><button class="tx-feeauto" id="txFeeAuto" type="button">↻ 重新依通路自動帶入</button></div>
+      </div>
+
+      <div class="field"><label>備註 <span class="hint">選填</span></label><textarea id="tx_note" placeholder="活動名稱、折扣原因、特殊說明…"></textarea></div>
       <div class="txprev" id="txPrev"></div>
       <div class="btns">
         <button class="btn ghost" id="txCancel" type="button">取消</button>
-        <button class="btn gold" id="txSave" type="button">記錄</button>
+        <button class="btn gold" id="txSave" type="button">確認賣出並扣庫存</button>
       </div>
     </div>
   </div>
@@ -590,7 +711,7 @@
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="grab"></div>
       <h2>銷售統計</h2>
-      <div class="sub">只統計「賣出」交易。毛利＝實際售出價 − 售出當下成本。</div>
+      <div class="sub">依每筆實際成交價、通路費用與售出當下成本計算；退貨會反向沖銷。</div>
       <div class="seg" id="statPeriod">
         <button class="seg-b on" data-period="month" type="button">本月</button>
         <button class="seg-b" data-period="week" type="button">本週</button>
@@ -673,7 +794,7 @@ let memOnly=false;
 let state={items:[],lookup:[],params:{},tx:[],showAllDims:false,editId:null,group:false,
   life:'all',elems:new Set(),tags:new Set(),lowOnly:false,sort:'def',expandedId:null,statsOpen:false,lkEditId:null,
   txItemId:null,txType:'sale',hisItemId:null,statPeriod:'month',lowDismissed:false,photoTmp:undefined,
-  theme:'',cardfs:'',density:''};
+  txFeeOpen:false,txFeeTouched:null,theme:'',cardfs:'',density:''};
 
 function loadPrefs(){try{const r=localStorage.getItem(PREFS);if(r){const o=JSON.parse(r);
   state.sort=o.sort||'def';state.group=!!o.group;state.life=o.life||'all';
@@ -691,6 +812,7 @@ function applyAppearance(){const b=document.body;
 const PKEYS={markup:'蝦皮加價倍率',comm:'蝦皮抽成%',ship:'蝦皮運費',fix:'固定成本',cap:'利潤封頂',safe:'安全庫存(預設)',cert:'證書成本'};
 function p(k){return Number(state.params[PKEYS[k]])||0;}
 const uid=()=>'i'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const TX_CHANNEL_KEY='jingyue_last_tx_channel_v1';
 
 function normField(it){
   if(!Array.isArray(it.tags))it.tags=it.tags?[String(it.tags)]:[];
@@ -700,6 +822,14 @@ function normField(it){
   it.actualPrice=money(it.actualPrice);
   it.cert=!!it.cert;
   return it;
+}
+function normTx(t){
+  if(!t||typeof t!=='object')return t;
+  t.qty=num(t.qty)??0;t.price=money(t.price)??0;
+  ['costAtSale','certCostAtSale','platformFee','shippingFee','fixedFee','otherFee'].forEach(k=>{t[k]=money(t[k])??0;});
+  t.channel=String(t.channel||'').trim();t.promo=String(t.promo||'').trim();t.ref=String(t.ref||'').trim();t.note=String(t.note||'').trim();
+  t.date=t.date?String(t.date).slice(0,10):new Date().toISOString().slice(0,10);
+  return t;
 }
 let localUpdatedAt=0, applyingRemote=false;
 function load(){
@@ -713,7 +843,7 @@ function load(){
     state.tx=[];
   }
   state.items.forEach(it=>{if(!it._id)it._id=uid();normField(it);});
-  state.tx.forEach(t=>{t.price=money(t.price);if(t.costAtSale!=null)t.costAtSale=money(t.costAtSale);});
+  state.tx=state.tx.filter(Boolean).map(normTx);
   ['ship','fix','cap','cert'].forEach(k=>{state.params[PKEYS[k]]=money(p(k))??0;});
   try{localStorage.getItem(KEY);}catch(e){memOnly=true;}
   if(memOnly) document.getElementById('memNote').style.display='block';
@@ -751,6 +881,20 @@ function netProfit(price,cost,certCost){const pr=money(price),ec=money(cost);if(
   return money(pr*(1-p('comm'))-money(p('ship'))-money(p('fix'))-(money(certCost)||0)-ec);}
 function itemNet(it){return netProfit(itemSalePrice(it),effectiveCost(it),certCostOf(it));}
 
+/* ── exact transaction accounting ── */
+function txGross(t){return (num(t&&t.qty)??0)*(money(t&&t.price)??0);}
+function txFeeTotal(t){return ['platformFee','shippingFee','fixedFee','otherFee'].reduce((sum,k)=>sum+(money(t&&t[k])??0),0);}
+function txCostTotal(t){const q=num(t&&t.qty)??0;return q*((money(t&&t.costAtSale)??0)+(money(t&&t.certCostAtSale)??0));}
+function txProfitImpact(t){if(!t)return 0;const gross=txGross(t),cost=txCostTotal(t),fees=txFeeTotal(t);
+  if(t.type==='sale')return money(gross-cost-fees)??0;
+  if(t.type==='return')return money(-gross+cost-fees)??0;
+  return 0;}
+function txRevenueImpact(t){if(!t)return 0;return t.type==='sale'?txGross(t):t.type==='return'?-txGross(t):0;}
+function txCostImpact(t){if(!t)return 0;return t.type==='sale'?txCostTotal(t):t.type==='return'?-txCostTotal(t):0;}
+function txChannelName(t){return String(t&&t.channel||'未標記');}
+function latestSaleTx(itemId){return state.tx.filter(t=>t.itemId===itemId&&t.type==='sale').sort((a,b)=>String(b.date).localeCompare(a.date)||(String(b.id).localeCompare(String(a.id))))[0]||null;}
+function returnableQty(itemId){let q=0;state.tx.forEach(t=>{if(t.itemId!==itemId)return;if(t.type==='sale')q+=num(t.qty)??0;else if(t.type==='return')q-=num(t.qty)??0;});return Math.max(0,q);}
+
 /* ── photos via IndexedDB (graceful if unavailable) ── */
 let _db=null;
 function photoDB(){return new Promise((res,rej)=>{if(_db)return res(_db);if(!('indexedDB' in window))return rej('no-idb');
@@ -770,29 +914,41 @@ function photoURL(id){return getPhoto(id).then(b=>{if(!b)return null;if(_purl[id
 function loadVisiblePhotos(){document.querySelectorAll('img[data-photo]:not([data-done])').forEach(el=>{const id=el.dataset.photo;el.dataset.done='1';photoURL(id).then(u=>{if(u)el.src=u;else el.style.display='none';}).catch(()=>{el.style.display='none';});});}
 
 /* ── transactions ── */
-function recordTx(itemId,type,qty,price,date,note){
-  const it=state.items.find(x=>x._id===itemId);if(!it)return;
-  const q=num(qty);if(q===null||q<=0){toast('數量需大於 0');return;}
-  const t={id:uid(),itemId,type,qty:q,price:money(price),date:date||new Date().toISOString().slice(0,10),note:(note||'').trim()};
-  if(type==='sale'||type==='return')t.costAtSale=money(effectiveCost(it))??0;
+function recordTx(itemId,type,qty,price,date,note,meta){
+  const it=state.items.find(x=>x._id===itemId);if(!it)return false;
+  const q=num(qty),pr=money(price);meta=meta||{};
+  if(q===null||q<=0||!Number.isInteger(q)){toast('數量必須是大於 0 的整數');return false;}
+  if(pr===null||pr<0){toast(type==='buy'?'請填進貨單價':'請填實際成交單價');return false;}
+  const current=num(it.qty)??0;
+  if(type==='sale'&&q>current){toast('庫存只有 '+current+' 件，無法賣出 '+q+' 件');return false;}
+  if(type==='sale'&&!String(meta.channel||'').trim()){toast('請選擇銷售通路');return false;}
+  const canReturn=returnableQty(itemId);
+  if(type==='return'&&canReturn>0&&q>canReturn){toast('可退貨數量最多 '+canReturn+' 件');return false;}
+  const t=normTx({
+    id:uid(),itemId,type,qty:q,price:pr,date:date||new Date().toISOString().slice(0,10),note:(note||'').trim(),
+    channel:String(meta.channel||'').trim(),promo:String(meta.promo||'').trim(),ref:String(meta.ref||'').trim(),
+    platformFee:meta.platformFee,shippingFee:meta.shippingFee,fixedFee:meta.fixedFee,otherFee:meta.otherFee,
+    costAtSale:type==='return'?(money((latestSaleTx(itemId)||{}).costAtSale)??money(effectiveCost(it))??0):type==='sale'?(money(effectiveCost(it))??0):0,
+    certCostAtSale:type==='return'?(money((latestSaleTx(itemId)||{}).certCostAtSale)??money(certCostOf(it))??0):type==='sale'?(money(certCostOf(it))??0):0
+  });
   state.tx.push(t);
-  if(type==='sale')it.qty=Math.max(0,(num(it.qty)??0)-q);
-  else if(type==='return')it.qty=(num(it.qty)??0)+q;
-  else if(type==='buy'){it.qty=(num(it.qty)??0)+q;if(it.costMode!=='auto'&&t.price!=null)it.cost=t.price;}
-  save();render();
+  if(type==='sale')it.qty=current-q;
+  else if(type==='return')it.qty=current+q;
+  else if(type==='buy'){it.qty=current+q;if(it.costMode!=='auto')it.cost=pr;}
+  save();render();return true;
 }
 function deleteTx(txId){
   const t=state.tx.find(x=>x.id===txId);if(!t)return;
-  if(!confirm('刪除這筆交易？會把數量改回來'))return;
+  if(!confirm('刪除這筆交易？庫存數量會一併還原'))return;
   const it=state.items.find(x=>x._id===t.itemId);
   if(it){if(t.type==='sale')it.qty=(num(it.qty)??0)+(num(t.qty)??0);
     else if(t.type==='return')it.qty=Math.max(0,(num(it.qty)??0)-(num(t.qty)??0));
     else if(t.type==='buy')it.qty=Math.max(0,(num(it.qty)??0)-(num(t.qty)??0));}
   state.tx=state.tx.filter(x=>x.id!==txId);
-  save();renderHistory();render();toast('已刪除交易');
+  save();renderHistory();render();toast('交易已刪除，庫存已還原');
 }
-function quickSell(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'sale',1,itemSalePrice(it)??0);}
-function quickBuy(id){const it=state.items.find(x=>x._id===id);if(!it)return;recordTx(id,'buy',1,effectiveCost(it)??0);}
+function quickSell(id){openTx(id,'sale',1);}
+function quickBuy(id){openTx(id,'buy',1);}
 
 /* ───────── five-element colors / form fields ───────── */
 const ECOLOR={'金':'var(--jin)','木':'var(--mu)','水':'var(--shui)','火':'var(--huo)','土':'var(--tu)','多元':'var(--duo)'};
@@ -873,7 +1029,7 @@ function cardHtml(it){
   const col=elemColor(it.element);
   const sale=itemSuggest(it), actual=itemActual(it), sell=itemSalePrice(it), shop=itemShopee(it), ec=effectiveCost(it), net=itemNet(it);
   const st=stockStatus(it.qty,num(it.safe)??p('safe'));
-  const saleHtml=sell!=null?`<span class="pill sale">${actual!==null?'實售':'建議'} ${fmt(sell)}</span>`:'';
+  const saleHtml=sell!=null?`<span class="pill sale">${actual!==null?'預設':'建議'} ${fmt(sell)}</span>`:'';
   const costHtml=ec!=null?`<span class="pill cost">進 ${fmt(ec)}${it.costMode==='auto'?' 均':''}</span>`:'';
   const netHtml=net!=null?`<span class="pill net" style="color:${net>=0?'var(--ok)':'var(--out)'};background:${net>=0?'rgba(95,184,122,.12)':'rgba(224,100,79,.12)'}">淨 ${fmt(net)}</span>`:'';
   const certHtml=it.cert?`<span class="pill" style="color:var(--gilt);background:rgba(201,162,39,.1)">證</span>`:'';
@@ -885,14 +1041,13 @@ function cardHtml(it){
       ${it.photoId?`<img class="exp-photo" data-photo="${esc(it.photoId)}" alt="">`:''}
       <div class="exp-specs">${specHtml(it)||'尚無規格'}${it.cert?' <span style="opacity:.3">·</span> 附證書':''}${it.date?` <span style="opacity:.3">·</span> 進貨 ${esc(it.date)}`:''}</div>
       <div class="exp-price">蝦皮定價 <b>${shop!=null?fmt(shop):'—'}</b> ｜ 建議售價 <b>${sale!=null?fmt(sale):'—'}</b></div>
-      <div class="exp-price" style="margin-top:2px">實際出售 <b>${actual!==null?fmt(actual):'未設定'}</b> ｜ 實拿淨利 <b style="color:${net>=0?'var(--ok)':'var(--out)'}">${net!=null?fmt(net):'—'}</b></div>
-      <div class="exp-price" style="margin-top:2px;color:var(--muted2);font-size:.85em">${actual!==null?'依實際出售金額':'未填實售金額，暫以建議售價'}計算；已扣蝦皮抽成/運費/固定${it.cert?'/證書':''}</div>
+      <div class="exp-price" style="margin-top:2px">預設成交 <b>${actual!==null?fmt(actual):'未設定'}</b> ｜ 蝦皮預估淨利 <b style="color:${net>=0?'var(--ok)':'var(--out)'}">${net!=null?fmt(net):'—'}</b></div>
+      <div class="exp-price" style="margin-top:2px;color:var(--muted2);font-size:.85em">預設成交價只負責預填；每次賣貨都會另外記錄實際價格、通路與費用。</div>
       <div class="exp-actions">
-        <button class="xb minus" data-act="sell" data-id="${it._id}">賣 1</button>
-        <span class="xqty">庫存 ${num(it.qty)??0}</span>
-        <button class="xb plus" data-act="buy" data-id="${it._id}">進 1</button>
-        <button class="xb" data-act="tx" data-id="${it._id}">交易…</button>
-        <button class="xb" data-act="his" data-id="${it._id}">明細</button>
+        <button class="xb sell" data-act="sell" data-id="${it._id}" ${(num(it.qty)??0)<=0?'disabled':''}>賣貨</button>
+        <span class="xqty stockpill">庫存 ${num(it.qty)??0}</span>
+        <button class="xb buy" data-act="buy" data-id="${it._id}">進貨</button>
+        <button class="xb" data-act="his" data-id="${it._id}">交易明細</button>
         <button class="xb" data-act="link" data-id="${it._id}">🔗 連結</button>
         ${it.link?`<a class="xb link" href="${esc(it.link)}" target="_blank" rel="noopener">開蝦皮</a>`:''}
         <button class="xb edit" data-act="edit" data-id="${it._id}">編輯</button>
@@ -1153,45 +1308,123 @@ function delItem(){
 }
 
 /* ───────── transaction dialog / history / sales stats ───────── */
-function openTx(itemId){const it=state.items.find(x=>x._id===itemId);if(!it)return;
-  state.txItemId=itemId;$('txItemName').textContent=it.name+'（庫存 '+(num(it.qty)??0)+'）';
-  $('tx_qty').value=1;$('tx_date').value=new Date().toISOString().slice(0,10);$('tx_note').value='';
-  setTxType('sale');$('txBackdrop').classList.add('show');}
-function setTxType(type){state.txType=type;
-  document.querySelectorAll('#txTypeSeg .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.tx===type));
-  const it=state.items.find(x=>x._id===state.txItemId);
-  if(type==='sale'){$('txTitle').textContent='記一筆 · 賣出';$('txPriceLabel').innerHTML='售出單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSalePrice(it)??''):'';}
-  else if(type==='return'){$('txTitle').textContent='記一筆 · 退貨';$('txPriceLabel').innerHTML='退款單價 <span class="hint">元</span>';$('tx_price').value=it?(itemSalePrice(it)??''):'';}
-  else{$('txTitle').textContent='記一筆 · 進貨';$('txPriceLabel').innerHTML='進貨單價 <span class="hint">元</span>';$('tx_price').value=it?(effectiveCost(it)??''):'';}
-  updateTxPrev();}
-function updateTxPrev(){const q=num($('tx_qty').value)??0,pr=num($('tx_price').value)??0;
-  const it=state.items.find(x=>x._id===state.txItemId);const cur=num(it&&it.qty)??0;
-  if(state.txType==='sale'){const c=it?(effectiveCost(it)??0):0;
-    $('txPrev').innerHTML=`銷售額 ${fmt(pr*q)} ｜ 成本 ${fmt(c*q)} ｜ 毛利 <b style="color:var(--ok)">${fmt((pr-c)*q)}</b>　→ 庫存 ${Math.max(0,cur-q)}`;}
+const TX_FEE_IDS={platform:'tx_platform_fee',shipping:'tx_shipping_fee',fixed:'tx_fixed_fee',other:'tx_other_fee'};
+function readTxChannel(){const raw=$('tx_channel').value;return raw==='其他'?$('tx_channel_other').value.trim():raw;}
+function setTxFeeOpen(open){state.txFeeOpen=!!open;$('txFeePanel').style.display=open?'block':'none';$('txFeeToggle').classList.toggle('open',!!open);}
+function setTxFeeValue(key,value,force){if(force||!state.txFeeTouched||!state.txFeeTouched[key])$(TX_FEE_IDS[key]).value=money(value)??0;}
+function autoTxFees(force){
+  const q=num($('tx_qty').value)??0,pr=money($('tx_price').value)??0,total=q*pr,raw=$('tx_channel').value;
+  if(state.txType==='sale'){
+    setTxFeeValue('platform',raw==='蝦皮'?total*p('comm'):0,force);
+    setTxFeeValue('shipping',raw==='蝦皮'?p('ship'):0,force);
+    setTxFeeValue('fixed',p('fix'),force);
+    setTxFeeValue('other',0,force);
+  }else{
+    ['platform','shipping','fixed','other'].forEach(k=>setTxFeeValue(k,0,force));
+  }
+  const fees=['tx_platform_fee','tx_shipping_fee','tx_fixed_fee','tx_other_fee'].reduce((a,id)=>a+(money($(id).value)??0),0);
+  $('txFeeBrief').textContent=state.txType==='buy'?'進貨不計銷售費用':fees?('合計 '+fmt(fees)):'目前 $0';
+}
+function renderTxPriceQuick(it){
+  let list=[];
+  if(state.txType==='buy')list=[['目前進價',effectiveCost(it)]];
   else if(state.txType==='return'){
-    $('txPrev').innerHTML=`退款 <b style="color:var(--out)">-${fmt(pr*q)}</b>　→ 商品退回庫存 ${cur+q}`;}
-  else $('txPrev').innerHTML=`進貨金額 ${fmt(pr*q)}　→ 庫存 ${cur+q}`;}
-function saveTx(){recordTx(state.txItemId,state.txType,$('tx_qty').value,$('tx_price').value,$('tx_date').value,$('tx_note').value);
-  $('txBackdrop').classList.remove('show');toast(state.txType==='sale'?'已記錄賣出':state.txType==='return'?'已記錄退貨':'已記錄進貨');}
+    const last=latestSaleTx(it._id);list=[['最近成交',last?last.price:null],['預設成交',itemSalePrice(it)]];
+  }else list=[['預設成交',itemSalePrice(it)],['建議售價',itemSuggest(it)],['蝦皮定價',itemShopee(it)]];
+  const seen=new Set();
+  $('txPriceQuick').innerHTML=list.filter(([,v])=>v!=null&&!seen.has(String(v))&&seen.add(String(v))).map(([label,v])=>`<button class="tx-pricechip" type="button" data-price="${money(v)}">${label} ${fmt(v)}</button>`).join('');
+}
+function openTx(itemId,type,qty){
+  const it=state.items.find(x=>x._id===itemId);if(!it)return;
+  state.txItemId=itemId;state.txFeeTouched={platform:false,shipping:false,fixed:false,other:false};
+  $('txItemName').textContent=it.name;
+  $('txItemMeta').textContent=[specHtml(it).replace(/<[^>]+>/g,'').replace(/·/g,' · '),'成本 '+fmt(effectiveCost(it)??0)].filter(Boolean).join('　');
+  $('txItemSuggest').textContent=itemSuggest(it)!=null?fmt(itemSuggest(it)):'—';
+  $('txStockPill').textContent='庫存 '+(num(it.qty)??0);
+  $('tx_qty').value=qty||1;$('tx_date').value=new Date().toISOString().slice(0,10);$('tx_note').value='';$('tx_ref').value='';$('tx_promo').value='';$('tx_channel_other').value='';
+  let last='蝦皮';try{last=localStorage.getItem(TX_CHANNEL_KEY)||'蝦皮';}catch(e){}
+  $('tx_channel').value=[...$('tx_channel').options].some(o=>o.value===last)?last:'其他';
+  if($('tx_channel').value==='其他'&&last!=='其他')$('tx_channel_other').value=last;
+  setTxFeeOpen(false);setTxType(type||'sale');$('txBackdrop').classList.add('show');
+  setTimeout(()=>{$('tx_price').focus();$('tx_price').select();},180);
+}
+function setTxType(type){
+  state.txType=type;state.txFeeTouched={platform:false,shipping:false,fixed:false,other:false};
+  document.querySelectorAll('#txTypeSeg .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.tx===type));
+  const it=state.items.find(x=>x._id===state.txItemId);if(!it)return;
+  const saleOnly=type==='sale';$('txPromoWrap').style.display=saleOnly?'block':'none';
+  $('txFeeToggle').style.display=type==='buy'?'none':'flex';$('txFeePanel').style.display=(type!=='buy'&&state.txFeeOpen)?'block':'none';
+  if(type==='sale'){
+    $('txTitle').textContent='新增銷售紀錄';$('txPriceLabel').innerHTML='實際售出單價 <span class="req">＊</span><span class="hint"> 元</span>';
+    $('txChannelLabel').innerHTML='銷售通路 <span class="req">＊</span>';$('txRefLabel').innerHTML='買家／訂單編號 <span class="hint">選填</span>';
+    $('txSave').textContent='確認賣出並扣庫存';$('tx_price').value=itemSalePrice(it)??'';
+  }else if(type==='return'){
+    const last=latestSaleTx(it._id);
+    $('txTitle').textContent='新增退貨紀錄';$('txPriceLabel').innerHTML='實際退款單價 <span class="req">＊</span><span class="hint"> 元</span>';
+    $('txChannelLabel').innerHTML='原銷售通路 <span class="hint">選填</span>';$('txRefLabel').innerHTML='訂單編號／退貨原因 <span class="hint">選填</span>';
+    $('txSave').textContent='確認退貨並回庫';$('tx_price').value=last?(money(last.price)??''):(itemSalePrice(it)??'');
+    if(last&&last.channel){const opt=[...$('tx_channel').options].find(o=>o.value===last.channel);$('tx_channel').value=opt?last.channel:'其他';$('tx_channel_other').value=opt?'':last.channel;}
+  }else{
+    $('txTitle').textContent='新增進貨紀錄';$('txPriceLabel').innerHTML='實際進貨單價 <span class="req">＊</span><span class="hint"> 元</span>';
+    $('txChannelLabel').innerHTML='進貨來源 <span class="hint">選填</span>';$('txRefLabel').innerHTML='供應商／訂單編號 <span class="hint">選填</span>';
+    $('txSave').textContent='確認進貨並入庫';$('tx_price').value=effectiveCost(it)??'';
+  }
+  $('txChannelOtherWrap').style.display=$('tx_channel').value==='其他'?'block':'none';
+  renderTxPriceQuick(it);autoTxFees(true);updateTxPrev();
+}
+function updateTxPrev(){
+  const q=num($('tx_qty').value)??0,pr=money($('tx_price').value)??0,it=state.items.find(x=>x._id===state.txItemId);if(!it)return;
+  const cur=num(it.qty)??0;autoTxFees(false);
+  const platform=money($('tx_platform_fee').value)??0,shipping=money($('tx_shipping_fee').value)??0,fixed=money($('tx_fixed_fee').value)??0,other=money($('tx_other_fee').value)??0;
+  const gross=q*pr,cost=q*((money(effectiveCost(it))??0)+(money(certCostOf(it))??0)),fees=platform+shipping+fixed+other;
+  if(state.txType==='buy'){
+    $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>本次進貨金額</span><b>${fmt(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong>${cur+q} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>進貨數量</span><b>${q||0} 件</b></div><div class="tx-sumcell"><span>單件成本</span><b>${fmt(pr)}</b></div><div class="tx-sumcell"><span>目前庫存</span><b>${cur} 件</b></div></div>`;
+    return;
+  }
+  const profit=state.txType==='sale'?money(gross-cost-fees)??0:money(-gross+cost-fees)??0;
+  const after=state.txType==='sale'?cur-q:cur+q,margin=gross>0?Math.round(profit/gross*100):0;
+  let alert='';
+  if(state.txType==='sale'){
+    const ref=itemSuggest(it)??0,discount=ref>0&&pr<ref?Math.round((1-pr/ref)*100):0;
+    const cls=profit<0?'bad':margin<20?'warn':'good';
+    const msg=profit<0?'這筆交易會虧損，請確認售價與費用。':margin<20?'淨利率低於 20%，請確認是否為刻意促銷。':discount?`較建議售價低 ${discount}%；已按實際成交價計算。`:'價格與費用已完整帶入，確認後才會扣庫存。';
+    alert=`<div class="tx-alert ${cls}">${msg}</div>`;
+  }else alert=`<div class="tx-alert warn">退貨會增加庫存並沖銷營收；退貨產生的額外費用可在「費用明細」填入。</div>`;
+  $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>${state.txType==='sale'?'本筆實收':'本筆退款'}</span><b>${fmt(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong style="color:${after<=0?'var(--out)':'var(--txt)'}">${after} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>商品成本</span><b>${fmt(cost)}</b></div><div class="tx-sumcell"><span>通路／其他費</span><b>${fmt(fees)}</b></div><div class="tx-sumcell"><span>${state.txType==='sale'?'實拿淨利':'淨利影響'}</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b></div></div>${alert}`;
+}
+function saveTx(){
+  const raw=$('tx_channel').value,channel=readTxChannel();
+  if(raw==='其他'&&!channel&&state.txType==='sale'){toast('請填寫其他通路名稱');$('tx_channel_other').focus();return;}
+  const ok=recordTx(state.txItemId,state.txType,$('tx_qty').value,$('tx_price').value,$('tx_date').value,$('tx_note').value,{
+    channel,promo:state.txType==='sale'?$('tx_promo').value:'',ref:$('tx_ref').value,
+    platformFee:$('tx_platform_fee').value,shippingFee:$('tx_shipping_fee').value,fixedFee:$('tx_fixed_fee').value,otherFee:$('tx_other_fee').value
+  });
+  if(!ok)return;
+  if(state.txType==='sale'){try{localStorage.setItem(TX_CHANNEL_KEY,raw==='其他'?channel:raw);}catch(e){}}
+  $('txBackdrop').classList.remove('show');toast(state.txType==='sale'?'銷售已記錄，庫存已扣除':state.txType==='return'?'退貨已記錄，商品已回庫':'進貨已記錄，庫存已增加');
+}
 function openHistory(itemId){state.hisItemId=itemId;renderHistory();$('hisBackdrop').classList.add('show');}
-function renderHistory(){const it=state.items.find(x=>x._id===state.hisItemId);if(!it)return;
+function renderHistory(){
+  const it=state.items.find(x=>x._id===state.hisItemId);if(!it)return;
   $('hisTitle').textContent=it.name+' · 交易明細';
-  const txs=state.tx.filter(t=>t.itemId===state.hisItemId).sort((a,b)=>String(b.date).localeCompare(a.date)||(b.id>a.id?1:-1));
-  let sold=0,rev=0,cogs=0,bought=0,spent=0,returned=0,refund=0;
-  txs.forEach(t=>{if(t.type==='sale'){sold+=t.qty;rev+=t.qty*(num(t.price)??0);cogs+=t.qty*(num(t.costAtSale)??0);}
-    else if(t.type==='return'){returned+=t.qty;refund+=t.qty*(num(t.price)??0);}
-    else if(t.type==='buy'){bought+=t.qty;spent+=t.qty*(num(t.price)??0);}});
-  $('hisSummary').innerHTML=`賣出 ${sold} 件 · 淨營收 ${fmt(rev-refund)} · 毛利 ${fmt(rev-refund-cogs)}　｜　進貨 ${bought} 件${returned?'　｜　退貨 '+returned+' 件':''}`;
-  $('hisList').innerHTML=txs.length?txs.map(t=>{const label=t.type==='sale'?'賣出':t.type==='buy'?'進貨':t.type==='return'?'退貨':'調整';
-    const val=t.type==='sale'?fmt((num(t.price)??0)*t.qty):(t.type==='buy'?'-'+fmt((num(t.price)??0)*t.qty):t.type==='return'?'-'+fmt((num(t.price)??0)*t.qty):'');
-    return `<div class="hisrow"><span class="ht ${t.type}">${label}</span><span>${t.qty} 件</span><span class="hd">${esc(t.date)}${t.note?' · '+esc(t.note):''}</span><span class="hv">${val}</span><button class="hdel" data-tx="${t.id}" aria-label="刪除">✕</button></div>`;
-  }).join(''):`<div class="empty" style="padding:30px"><b>還沒有交易</b>用「賣 1 / 進 1」或「交易…」開始記錄</div>`;}
+  const txs=state.tx.filter(t=>t.itemId===state.hisItemId).sort((a,b)=>String(b.date).localeCompare(a.date)||(String(b.id).localeCompare(String(a.id))));
+  let sold=0,bought=0,returned=0,rev=0,profit=0,fees=0;
+  txs.forEach(t=>{if(t.type==='sale')sold+=num(t.qty)??0;else if(t.type==='return')returned+=num(t.qty)??0;else if(t.type==='buy')bought+=num(t.qty)??0;rev+=txRevenueImpact(t);profit+=txProfitImpact(t);if(t.type!=='buy')fees+=txFeeTotal(t);});
+  $('hisSummary').innerHTML=`淨售 ${sold-returned} 件 · 淨營收 ${fmt(rev)} · 實拿淨利 <b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b>　｜　進貨 ${bought} 件${fees?' · 費用 '+fmt(fees):''}`;
+  $('hisList').innerHTML=txs.length?txs.map(t=>{
+    const label=t.type==='sale'?'賣出':t.type==='buy'?'進貨':t.type==='return'?'退貨':'調整',gross=txGross(t),impact=txProfitImpact(t);
+    const meta=[t.date,t.channel,t.promo,t.ref,t.note].filter(Boolean).map(esc).join(' · ');
+    const main=t.type==='buy'?`進貨 ${t.qty} 件 · ${fmt(gross)}`:`${t.qty} 件 · 單價 ${fmt(t.price)}`;
+    const side=t.type==='sale'?`<b>${fmt(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">淨利 ${fmt(impact)}</span>`:t.type==='return'?`<b style="color:var(--out)">-${fmt(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">影響 ${fmt(impact)}</span>`:`<b>-${fmt(gross)}</b><span style="color:var(--muted)">庫存 +${t.qty}</span>`;
+    return `<div class="hisrow"><span class="ht ${t.type}">${label}</span><div class="hbody"><div class="hline"><b>${main}</b></div><div class="hd">${meta||'未填附註'}</div></div><div class="hside">${side}</div><button class="hdel" data-tx="${t.id}" aria-label="刪除">✕</button></div>`;
+  }).join(''):`<div class="empty" style="padding:30px"><b>還沒有交易</b>按「賣貨」或「進貨」建立第一筆紀錄</div>`;
+}
 function periodStart(p){const d=new Date();d.setHours(0,0,0,0);if(p==='week'){const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow);}else if(p==='month'){d.setDate(1);}else return null;return d;}
 function openStats(){closeData();renderSalesStats();$('statBackdrop').classList.add('show');}
 function monthlyTrend(n){n=n||6;const now=new Date();const months=[];
   for(let i=n-1;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:(d.getMonth()+1)+'月',rev:0,profit:0});}
   const idx={};months.forEach(m=>idx[m.key]=m);
-  state.tx.forEach(t=>{const sign=t.type==='sale'?1:t.type==='return'?-1:0;if(!sign)return;const m=idx[String(t.date).slice(0,7)];if(!m)return;const r=t.qty*(num(t.price)??0);m.rev+=sign*r;m.profit+=sign*(r-t.qty*(num(t.costAtSale)??0));});
+  state.tx.forEach(t=>{if(t.type!=='sale'&&t.type!=='return')return;const m=idx[String(t.date).slice(0,7)];if(!m)return;m.rev+=txRevenueImpact(t);m.profit+=txProfitImpact(t);});
   return months;}
 function trendChartSVG(months){const W=320,H=140,padB=22,padT=10;const max=Math.max(1,...months.map(m=>Math.max(m.rev,m.profit)));
   const n=months.length,gw=W/n,bw=gw*0.3;let s='';
@@ -1210,33 +1443,44 @@ function pieSVG(parts){const total=parts.reduce((s,p)=>s+p.value,0);if(total<=0)
   return `<svg viewBox="0 0 140 140" width="138" height="138" style="display:block;margin:2px auto 0">${segs}</svg>`;}
 function renderSalesStats(){
   document.querySelectorAll('#statPeriod .seg-b').forEach(b=>b.classList.toggle('on',b.dataset.period===state.statPeriod));
-  const start=periodStart(state.statPeriod);
-  const inP=state.tx.filter(t=>(!start||new Date(t.date)>=start));
-  let qty=0,rev=0,cogs=0,saleCount=0,retQty=0,retAmt=0;const byElem={},byItem={};
-  inP.forEach(t=>{const sign=t.type==='sale'?1:t.type==='return'?-1:0;if(!sign)return;
-    const amt=t.qty*(num(t.price)??0),c=t.qty*(num(t.costAtSale)??0);
-    qty+=sign*t.qty;rev+=sign*amt;cogs+=sign*c;
-    if(t.type==='sale'){saleCount++;const it=state.items.find(x=>x._id===t.itemId);const nm=it?it.name:'(已刪除品項)';
-      byItem[nm]=(byItem[nm]||0)+t.qty;const ek=it?primaryElem(it.element):'其他';byElem[ek]=(byElem[ek]||0)+amt;}
-    else{retQty+=t.qty;retAmt+=amt;}});
-  const profit=rev-cogs,margin=rev>0?Math.round(profit/rev*100):0;
-  const avgOrder=saleCount>0?money(rev/saleCount):0,avgPrice=qty>0?money(rev/qty):0;
+  const start=periodStart(state.statPeriod),inP=state.tx.filter(t=>(!start||new Date(t.date)>=start));
+  let qty=0,rev=0,profit=0,cogs=0,fees=0,saleCount=0,saleGross=0,soldQty=0,retQty=0,retAmt=0;
+  const byElem={},byItem={},byChannel={};
+  inP.forEach(t=>{
+    if(t.type!=='sale'&&t.type!=='return')return;
+    const sign=t.type==='sale'?1:-1,amt=txGross(t),it=state.items.find(x=>x._id===t.itemId);
+    qty+=sign*(num(t.qty)??0);rev+=txRevenueImpact(t);profit+=txProfitImpact(t);cogs+=txCostImpact(t);fees+=txFeeTotal(t);
+    const ch=txChannelName(t);byChannel[ch]=(byChannel[ch]||0)+sign*amt;
+    const ek=it?primaryElem(it.element):'其他';byElem[ek]=(byElem[ek]||0)+sign*amt;
+    if(t.type==='sale'){
+      saleCount++;saleGross+=amt;soldQty+=num(t.qty)??0;const nm=it?it.name:'(已刪除品項)';byItem[nm]=(byItem[nm]||0)+(num(t.qty)??0);
+    }else{retQty+=num(t.qty)??0;retAmt+=amt;}
+  });
+  const margin=rev>0?Math.round(profit/rev*100):0,avgOrder=saleCount>0?money(saleGross/saleCount):0,avgPrice=soldQty>0?money(saleGross/soldQty):0;
   const top=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const elemArr=Object.entries(byElem).sort((a,b)=>b[1]-a[1]);
+  const elemArr=Object.entries(byElem).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const channelArr=Object.entries(byChannel).filter(([,v])=>v!==0).sort((a,b)=>b[1]-a[1]);
   const pieParts=elemArr.map(([k,v])=>({label:k,value:v,color:elemColor(k)}));
-  const pieLegend=elemArr.map(([k,v])=>`<div class="topsell"><span class="tn"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${elemColor(k)};margin-right:6px"></span>${k}</span><span class="tv">${fmt(v)} · ${rev>0?Math.round(v/(rev+retAmt>0?rev:1)*100):0}%</span></div>`).join('');
-  const tr=monthlyTrend(6),hasTrend=tr.some(m=>Math.abs(m.rev)>0);
+  const pieTotal=elemArr.reduce((a,[,v])=>a+v,0);
+  const pieLegend=elemArr.map(([k,v])=>`<div class="topsell"><span class="tn"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${elemColor(k)};margin-right:6px"></span>${k}</span><span class="tv">${fmt(v)} · ${pieTotal>0?Math.round(v/pieTotal*100):0}%</span></div>`).join('');
+  const channelRows=channelArr.map(([k,v])=>`<div class="topsell"><span class="tn">${esc(k)}</span><span class="tv" style="color:${v>=0?'var(--goldtxt)':'var(--out)'}">${fmt(v)}</span></div>`).join('');
+  const tr=monthlyTrend(6),hasTrend=tr.some(m=>Math.abs(m.rev)>0||Math.abs(m.profit)>0);
   $('statBody').innerHTML=`
     <div class="stat-big"><div><span>淨銷售件數</span><b>${qty}</b></div><div><span>淨銷售額</span><b>${fmt(rev)}</b></div></div>
-    <div class="stat-big"><div><span>毛利</span><b style="color:var(--ok)">${fmt(profit)}</b></div><div><span>毛利率</span><b>${margin}%</b></div></div>
-    ${saleCount?`<div class="stat-sec">經營指標</div>
-      <div class="topsell"><span class="tn">交易筆數</span><span class="tv">${saleCount} 筆</span></div>
-      <div class="topsell"><span class="tn">平均每筆銷售額</span><span class="tv">${fmt(avgOrder)}</span></div>
-      <div class="topsell"><span class="tn">平均每件售價</span><span class="tv">${fmt(avgPrice)}</span></div>
-      ${retQty?`<div class="topsell"><span class="tn" style="color:var(--out)">退貨</span><span class="tv">${retQty} 件 · ${fmt(retAmt)}</span></div>`:''}`:''}
-    ${hasTrend?`<div class="stat-sec">近 6 個月趨勢 <span style="float:right;font-weight:400"><span style="color:#c9a227">■</span> 營收　<span style="color:#5fb87a">■</span> 毛利</span></div><div class="chartbox">${trendChartSVG(tr)}</div>`:''}
+    <div class="stat-big"><div><span>實拿淨利</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b></div><div><span>淨利率</span><b>${margin}%</b></div></div>
+    ${saleCount?`<div class="stat-sec">成本結構</div>
+      <div class="topsell"><span class="tn">淨商品成本</span><span class="tv">${fmt(cogs)}</span></div>
+      <div class="topsell"><span class="tn">平台／運費／其他費用</span><span class="tv">${fmt(fees)}</span></div>
+      <div class="stat-sec">經營指標</div>
+      <div class="topsell"><span class="tn">銷售交易筆數</span><span class="tv">${saleCount} 筆</span></div>
+      <div class="topsell"><span class="tn">平均每筆成交額</span><span class="tv">${fmt(avgOrder)}</span></div>
+      <div class="topsell"><span class="tn">平均每件成交價</span><span class="tv">${fmt(avgPrice)}</span></div>
+      ${retQty?`<div class="topsell"><span class="tn" style="color:var(--out)">退貨沖銷</span><span class="tv">${retQty} 件 · ${fmt(retAmt)}</span></div>`:''}`:''}
+    ${channelRows?`<div class="stat-sec">銷售通路</div>${channelRows}`:''}
+    ${hasTrend?`<div class="stat-sec">近 6 個月趨勢 <span style="float:right;font-weight:400"><span style="color:#c9a227">■</span> 營收　<span style="color:#5fb87a">■</span> 淨利</span></div><div class="chartbox">${trendChartSVG(tr)}</div>`:''}
     ${pieParts.length?`<div class="stat-sec">各五行銷售佔比</div><div class="chartbox">${pieSVG(pieParts)}</div>${pieLegend}`:''}
-    ${top.length?`<div class="stat-sec">熱賣品項</div>${top.map(([n,v])=>`<div class="topsell"><span class="tn">${esc(n)}</span><span class="tv">${v} 件</span></div>`).join('')}`:'<div class="empty" style="padding:26px"><b>這段期間沒有銷售</b>用卡片的「賣 1」開始記錄</div>'}`;}
+    ${top.length?`<div class="stat-sec">熱賣品項</div>${top.map(([n,v])=>`<div class="topsell"><span class="tn">${esc(n)}</span><span class="tv">${v} 件</span></div>`).join('')}`:'<div class="empty" style="padding:26px"><b>這段期間沒有銷售</b>按商品卡片的「賣貨」開始記錄</div>'}`;
+}
 
 /* ───────── inventory health ───────── */
 function lastSaleDate(id){let d=null;state.tx.forEach(t=>{if(t.itemId===id&&t.type==='sale'){if(!d||String(t.date)>d)d=String(t.date);}});return d;}
@@ -1265,19 +1509,19 @@ function renderHealth(){
 
 /* ───────── printable monthly report ───────── */
 function printReport(){
-  const now=new Date(),mk=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const now=new Date(),mk=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'),start=new Date(now.getFullYear(),now.getMonth(),1);
   const inP=state.tx.filter(t=>(t.type==='sale'||t.type==='return')&&new Date(t.date)>=start);
-  let qty=0,rev=0,cogs=0,saleCount=0,retQty=0,retAmt=0;const byItem={};
-  inP.forEach(t=>{const sign=t.type==='sale'?1:-1;const amt=t.qty*(num(t.price)??0),c=t.qty*(num(t.costAtSale)??0);
-    qty+=sign*t.qty;rev+=sign*amt;cogs+=sign*c;
-    if(t.type==='sale'){saleCount++;const it=state.items.find(x=>x._id===t.itemId);const nm=it?it.name:'(已刪除)';byItem[nm]=byItem[nm]||{q:0,r:0};byItem[nm].q+=t.qty;byItem[nm].r+=amt;}
+  let qty=0,rev=0,profit=0,cogs=0,fees=0,saleCount=0,retQty=0,retAmt=0;const byItem={},byChannel={};
+  inP.forEach(t=>{const sign=t.type==='sale'?1:-1,amt=txGross(t);qty+=sign*(num(t.qty)??0);rev+=txRevenueImpact(t);profit+=txProfitImpact(t);cogs+=txCostImpact(t);fees+=txFeeTotal(t);
+    byChannel[txChannelName(t)]=(byChannel[txChannelName(t)]||0)+sign*amt;
+    if(t.type==='sale'){saleCount++;const it=state.items.find(x=>x._id===t.itemId),nm=it?it.name:'(已刪除)';byItem[nm]=byItem[nm]||{q:0,r:0};byItem[nm].q+=t.qty;byItem[nm].r+=amt;}
     else{retQty+=t.qty;retAmt+=amt;}});
   let invCost=0,need=0;const lowList=[];
   state.items.forEach(it=>{invCost+=(effectiveCost(it)??0)*(num(it.qty)??0);const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(st&&st.c!=='ok'){need++;lowList.push(esc(it.name)+'（'+(num(it.qty)??0)+'）');}});
-  const top=Object.entries(byItem).sort((a,b)=>b[1].r-a[1].r).slice(0,10);
+  const top=Object.entries(byItem).sort((a,b)=>b[1].r-a[1].r).slice(0,10),channels=Object.entries(byChannel).filter(([,v])=>v!==0).sort((a,b)=>b[1]-a[1]);
   $('printArea').innerHTML=`<h1>靜月之光 · 月報 ${mk}</h1><p class="pmeta">產出時間 ${now.toLocaleString('zh-TW')}</p>
-    <table><tr><td>本月淨銷售件數</td><td>${qty}</td></tr><tr><td>本月淨銷售額</td><td>${fmt(rev)}</td></tr><tr><td>本月毛利</td><td>${fmt(rev-cogs)}</td></tr><tr><td>毛利率</td><td>${rev>0?Math.round((rev-cogs)/rev*100):0}%</td></tr><tr><td>交易筆數</td><td>${saleCount} 筆</td></tr><tr><td>平均每筆銷售額</td><td>${fmt(saleCount>0?money(rev/saleCount):0)}</td></tr>${retQty?`<tr><td>退貨</td><td>${retQty} 件 · ${fmt(retAmt)}</td></tr>`:''}<tr><td>目前庫存成本</td><td>${fmt(invCost)}</td></tr><tr><td>待補貨品項</td><td>${need}</td></tr></table>
+    <table><tr><td>本月淨銷售件數</td><td>${qty}</td></tr><tr><td>本月淨銷售額</td><td>${fmt(rev)}</td></tr><tr><td>本月實拿淨利</td><td>${fmt(profit)}</td></tr><tr><td>淨利率</td><td>${rev>0?Math.round(profit/rev*100):0}%</td></tr><tr><td>淨商品成本</td><td>${fmt(cogs)}</td></tr><tr><td>平台／運費／其他費用</td><td>${fmt(fees)}</td></tr><tr><td>銷售交易筆數</td><td>${saleCount} 筆</td></tr>${retQty?`<tr><td>退貨沖銷</td><td>${retQty} 件 · ${fmt(retAmt)}</td></tr>`:''}<tr><td>目前庫存成本</td><td>${fmt(invCost)}</td></tr><tr><td>待補貨品項</td><td>${need}</td></tr></table>
+    <h2>銷售通路</h2>${channels.length?'<table>'+channels.map(([n,v])=>`<tr><td>${esc(n)}</td><td>${fmt(v)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
     <h2>熱賣品項（前 10）</h2>${top.length?'<table>'+top.map(([n,o])=>`<tr><td>${esc(n)}</td><td>${o.q} 件 · ${fmt(o.r)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
     <h2>待補貨清單</h2>${lowList.length?'<p>'+lowList.join('、')+'</p>':'<p>無</p>'}`;
   window.print();
@@ -1330,7 +1574,7 @@ async function pushCloud(){if(!fbDoc||!cloud.on)return;const payload=serializeSt
 function applyRemote(r){applyingRemote=true;try{
   state.items=Array.isArray(r.items)?r.items:[];state.items.forEach(it=>{if(!it._id)it._id=uid();normField(it);});
   if(Array.isArray(r.lookup))state.lookup=r.lookup;state.params=ensureParams(r.params);state.tx=Array.isArray(r.tx)?r.tx:[];
-  state.tx.forEach(t=>{t.price=money(t.price);if(t.costAtSale!=null)t.costAtSale=money(t.costAtSale);});
+  state.tx=state.tx.filter(Boolean).map(normTx);
   saveLocal();render();
   pullPhotos(state.items).catch(()=>{});
 }finally{applyingRemote=false;}}
@@ -1403,7 +1647,7 @@ function dataURLtoBlob(d){const a=String(d).split(',');const mime=(a[0].match(/:
 async function backupJson(){
   const photos={};
   for(const it of state.items){if(it.photoId){try{const b=await getPhoto(it.photoId);if(b)photos[it.photoId]=await blobToDataURL(b);}catch(e){}}}
-  const payload={_meta:{app:'jingyue-inv',ver:'v8',exported:new Date().toISOString(),items:state.items.length,tx:state.tx.length,photos:Object.keys(photos).length},
+  const payload={_meta:{app:'jingyue-inv',ver:'v9',exported:new Date().toISOString(),items:state.items.length,tx:state.tx.length,photos:Object.keys(photos).length},
     items:state.items,lookup:state.lookup,params:state.params,tx:state.tx,photos:photos};
   const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='靜月之光_備份_'+dateStamp()+'.json';a.click();
@@ -1430,7 +1674,7 @@ function restoreJson(file){
     state.items=newItems;
     if(Array.isArray(d.lookup))state.lookup=d.lookup.filter(c=>c&&c.name).map(normLook);
     state.params=ensureParams(d.params);
-    state.tx=Array.isArray(d.tx)?d.tx:[];
+    state.tx=(Array.isArray(d.tx)?d.tx:[]).filter(Boolean).map(normTx);
     if(d.photos&&typeof d.photos==='object'){for(const id in d.photos){try{await putPhoto(id,dataURLtoBlob(d.photos[id]));}catch(e){}}}
     for(const k in _purl){delete _purl[k];}
     save();render();closeData();
@@ -1465,7 +1709,7 @@ function buildWorkbook(){
   t.font={bold:true,size:15,color:{argb:GILT}};t.alignment={horizontal:'center',vertical:'middle'};t.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};ws.getRow(1).height=30;
   ws.mergeCells('A2:R2');const s2=ws.getCell('A2');s2.value=`📦 ${state.items.length} 件    🔴 需補貨 ${need}    💰 庫存成本 $${Math.round(cost).toLocaleString('en-US')}`;
   s2.font={size:12,color:{argb:SOFT}};s2.alignment={horizontal:'center',vertical:'middle'};s2.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK2}};ws.getRow(2).height=22;
-  goldHdr(ws.getRow(3),['#','品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','實際出售金額','實拿淨利','功效','安全庫存','補貨','蝦皮連結']);
+  goldHdr(ws.getRow(3),['#','品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','預設成交價','蝦皮預估淨利','功效','安全庫存','補貨','蝦皮連結']);
   const EDARK={'金':'FFB7791F','木':'FF2E7D46','水':'FF2C6FB0','火':'FFC0392B','土':'FF9A6B1E','多元':'FF7A4FB0','其他':'FF555555'};
   const exItems=[...state.items].sort(elemThenName);
   const gcount={};exItems.forEach(it=>{const g=primaryElem(it.element);gcount[g]=(gcount[g]||0)+1;});
@@ -1511,6 +1755,18 @@ function buildWorkbook(){
   sumc.fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};sumc.border={top:{style:'double',color:{argb:GOLD}}};
   ws.getRow(xr).height=24;
 
+  // ── 交易紀錄（每筆實際成交價、通路與費用） ──
+  const wt=wb.addWorksheet('交易紀錄',{views:[{state:'frozen',ySplit:2}]});
+  wt.columns=[13,8,20,7,10,12,16,12,18,11,10,10,10,12,12,28].map(w=>({width:w}));
+  wt.mergeCells('A1:P1');wt.getCell('A1').value='✦ 靜月之光 — 交易紀錄 ✦';wt.getCell('A1').font={bold:true,size:14,color:{argb:GILT}};wt.getCell('A1').alignment={horizontal:'center'};wt.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};wt.getRow(1).height=27;
+  goldHdr(wt.getRow(2),['日期','類型','品項','數量','成交單價','成交總額','通路／來源','成交方式','買家／訂單','平台／金流費','運費補貼','固定成本','其他成本','商品成本','實拿淨利','備註']);
+  let tr=3;[...state.tx].sort((a,b)=>String(b.date).localeCompare(a.date)||(String(b.id).localeCompare(String(a.id)))).forEach(tx=>{
+    const it=state.items.find(x=>x._id===tx.itemId),row=wt.getRow(tr++),label=tx.type==='sale'?'賣出':tx.type==='buy'?'進貨':tx.type==='return'?'退貨':'調整';
+    row.values=[tx.date,label,it?it.name:'(已刪除品項)',num(tx.qty)??0,money(tx.price)??0,txGross(tx),tx.channel||'',tx.promo||'',tx.ref||'',money(tx.platformFee)??0,money(tx.shippingFee)??0,money(tx.fixedFee)??0,money(tx.otherFee)??0,txCostTotal(tx),tx.type==='buy'?'':txProfitImpact(tx),tx.note||''];
+    if(tx.type==='sale')row.getCell(2).font={color:{argb:'FF2E7D46'},bold:true};else if(tx.type==='return')row.getCell(2).font={color:{argb:'FFC0392B'},bold:true};else row.getCell(2).font={color:{argb:'FF2C6FB0'},bold:true};
+  });
+  wt.autoFilter={from:'A2',to:'P2'};
+
   // ── 補貨清單 (current low-stock, gilt header) ──
   const wl=wb.addWorksheet('補貨清單');wl.columns=[18,8,6,8,8].map(w=>({width:w}));
   wl.mergeCells('A1:E1');wl.getCell('A1').value='🔴 需補貨清單（匯出當下計算）';wl.getCell('A1').font={bold:true,color:{argb:GILT}};wl.getCell('A1').fill={type:'pattern',pattern:'solid',fgColor:{argb:INK}};wl.getRow(1).height=24;
@@ -1546,7 +1802,7 @@ async function exportXlsx(){
   }catch(e){toast('匯出失敗：'+e.message);}
 }
 function exportCsv(){
-  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','實際出售金額','淨利','證書','功效','安全庫存','補貨','蝦皮連結'];
+  const hdr=['品項名稱','五行','珠徑','手圍','戒圍','鍊長','進價','數量','進貨日期','蝦皮定價','建議售價','預設成交價','蝦皮預估淨利','證書','功效','安全庫存','補貨','蝦皮連結'];
   const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
   const rows=[hdr.map(q).join(',')];
   state.items.forEach(it=>{
@@ -1577,7 +1833,7 @@ async function importXlsx(file){
     const items=[];
     for(let r=hr+1;r<=ws.rowCount;r++){const row=ws.getRow(r);const nm=String(cellVal(g(row,'品項名稱'))).trim();if(!nm)continue;
       items.push({_id:uid(),name:nm,element:sv(g(row,'五行')),bead:ni(g(row,'珠徑')),wrist:ni(g(row,'手圍')),ring:ni(g(row,'戒圍')),chain:ni(g(row,'鍊長')),
-        cost:money(ni(g(row,'進價'))),actualPrice:money(ni(g(row,'實際出售金額'))),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
+        cost:money(ni(g(row,'進價'))),actualPrice:money(ni(g(row,'預設成交價'))??ni(g(row,'實際出售金額'))),qty:ni(g(row,'數量')),date:fmtDate(cellVal(g(row,'進貨日期'))),efficacy:sv(g(row,'功效')),safe:ni(g(row,'安全庫存')),link:sv(g(row,'蝦皮連結'))});}
     if(!items.length){toast('進銷總表沒有讀到品項');return;}
     items.forEach(normField);
     state.items=items;
@@ -1723,6 +1979,12 @@ $('txSave').onclick=saveTx;
 $('txBackdrop').onclick=e=>{if(e.target===$('txBackdrop'))$('txBackdrop').classList.remove('show');};
 $('txTypeSeg').onclick=e=>{const b=e.target.closest('[data-tx]');if(b)setTxType(b.dataset.tx);};
 $('tx_qty').oninput=updateTxPrev;$('tx_price').oninput=updateTxPrev;
+$('txPriceQuick').onclick=e=>{const b=e.target.closest('[data-price]');if(!b)return;$('tx_price').value=b.dataset.price;updateTxPrev();};
+$('tx_channel').onchange=()=>{$('txChannelOtherWrap').style.display=$('tx_channel').value==='其他'?'block':'none';state.txFeeTouched={platform:false,shipping:false,fixed:false,other:false};autoTxFees(true);updateTxPrev();if($('tx_channel').value==='其他')setTimeout(()=>$('tx_channel_other').focus(),50);};
+$('tx_channel_other').oninput=updateTxPrev;
+$('txFeeToggle').onclick=()=>setTxFeeOpen(!state.txFeeOpen);
+$('txFeeAuto').onclick=()=>{state.txFeeTouched={platform:false,shipping:false,fixed:false,other:false};autoTxFees(true);updateTxPrev();toast('費用已依目前通路重算');};
+Object.entries(TX_FEE_IDS).forEach(([key,id])=>{$(id).oninput=()=>{state.txFeeTouched=state.txFeeTouched||{};state.txFeeTouched[key]=true;updateTxPrev();};});
 $('hisClose').onclick=()=>$('hisBackdrop').classList.remove('show');
 $('hisBackdrop').onclick=e=>{if(e.target===$('hisBackdrop'))$('hisBackdrop').classList.remove('show');};
 $('hisList').onclick=e=>{const b=e.target.closest('[data-tx]');if(b)deleteTx(b.dataset.tx);};
