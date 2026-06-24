@@ -632,7 +632,7 @@
 
       <div class="row2">
         <div class="field"><label>數量 <span class="req">＊</span><span class="hint"> 件</span></label><input id="tx_qty" type="number" inputmode="numeric" min="1" step="1" value="1"></div>
-        <div class="field"><label id="txPriceLabel">實際售出單價 <span class="req">＊</span><span class="hint"> 元</span></label><input id="tx_price" type="number" inputmode="numeric" min="0" step="10" placeholder="0"></div>
+        <div class="field"><label id="txPriceLabel">實際售出單價 <span class="req">＊</span><span class="hint"> 元</span></label><input id="tx_price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></div>
       </div>
       <div class="tx-pricechips" id="txPriceQuick"></div>
 
@@ -678,10 +678,10 @@
       </button>
       <div class="tx-feepanel" id="txFeePanel" style="display:none">
         <div class="tx-feegrid">
-          <div class="field"><label>平台／金流費 <span class="hint">元</span></label><input id="tx_platform_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
-          <div class="field"><label>運費補貼 <span class="hint">元</span></label><input id="tx_shipping_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
-          <div class="field"><label>包材／固定成本 <span class="hint">元</span></label><input id="tx_fixed_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
-          <div class="field"><label>其他成本 <span class="hint">元</span></label><input id="tx_other_fee" type="number" min="0" inputmode="numeric" step="10" value="0"></div>
+          <div class="field"><label>平台／金流費 <span class="hint">元</span></label><input id="tx_platform_fee" type="number" min="0" inputmode="decimal" step="0.01" value="0"></div>
+          <div class="field"><label>運費補貼 <span class="hint">元</span></label><input id="tx_shipping_fee" type="number" min="0" inputmode="decimal" step="0.01" value="0"></div>
+          <div class="field"><label>包材／固定成本 <span class="hint">元</span></label><input id="tx_fixed_fee" type="number" min="0" inputmode="decimal" step="0.01" value="0"></div>
+          <div class="field"><label>其他成本 <span class="hint">元</span></label><input id="tx_other_fee" type="number" min="0" inputmode="decimal" step="0.01" value="0"></div>
         </div>
         <div class="tx-feeactions"><button class="tx-feeauto" id="txFeeAuto" type="button">↻ 重新依通路自動帶入</button></div>
       </div>
@@ -825,8 +825,8 @@ function normField(it){
 }
 function normTx(t){
   if(!t||typeof t!=='object')return t;
-  t.qty=num(t.qty)??0;t.price=money(t.price)??0;
-  ['costAtSale','certCostAtSale','platformFee','shippingFee','fixedFee','otherFee'].forEach(k=>{t[k]=money(t[k])??0;});
+  t.qty=num(t.qty)??0;t.price=ledgerMoney(t.price)??0;
+  ['costAtSale','certCostAtSale','platformFee','shippingFee','fixedFee','otherFee'].forEach(k=>{t[k]=ledgerMoney(t[k])??0;});
   t.channel=String(t.channel||'').trim();t.promo=String(t.promo||'').trim();t.ref=String(t.ref||'').trim();t.note=String(t.note||'').trim();
   t.date=t.date?String(t.date).slice(0,10):new Date().toISOString().slice(0,10);
   return t;
@@ -856,11 +856,13 @@ function saveLocal(){
 function save(){saveLocal();if(cloud.on&&!applyingRemote)pushCloudSoon();}
 
 /* ───────── pricing ─────────
-   所有金額以元為單位，計算結果一律四捨五入到十位數，不保留個位數。
+   商品主檔的建議定價與預估淨利，四捨五入到十位數。
    例如：244 → 240，245 → 250。
-   定價與實拿淨利皆以最接近的 10 元為結果。 */
+   實際銷售／進貨／退貨記帳則保留原始金額，不套用此規則。 */
 function num(x){return (x===''||x==null||isNaN(x))?null:Number(x);}
 function money(x){const n=num(x);if(n===null)return null;return Math.sign(n)*Math.round(Math.abs(n)/10)*10;}
+// 交易記帳金額：保留使用者輸入的實際數值，不做十位數四捨五入。
+function ledgerMoney(x){const n=num(x);return n===null?null:n;}
 function shopeePrice(cost,certCost){const c=money(cost);if(c===null)return null;certCost=money(certCost)||0;return money((c*(1+p('markup'))+money(p('fix'))+money(p('ship'))+certCost)/(1-p('comm')));}
 function suggestPrice(cost,certCost){const c=money(cost);if(c===null)return null;certCost=money(certCost)||0;const s=shopeePrice(c,certCost);const cap=money((c+money(p('cap'))+money(p('fix'))+money(p('ship'))+certCost)/(1-p('comm')));return Math.min(s,cap);}
 function stockStatus(qty,safe){const q=num(qty);if(q===null)return null;const s=num(safe)??0;if(q<=0)return{t:'缺貨',c:'out'};if(q<=s)return{t:'補貨',c:'low'};return{t:'充足',c:'ok'};}
@@ -882,12 +884,12 @@ function netProfit(price,cost,certCost){const pr=money(price),ec=money(cost);if(
 function itemNet(it){return netProfit(itemSalePrice(it),effectiveCost(it),certCostOf(it));}
 
 /* ── exact transaction accounting ── */
-function txGross(t){return (num(t&&t.qty)??0)*(money(t&&t.price)??0);}
-function txFeeTotal(t){return ['platformFee','shippingFee','fixedFee','otherFee'].reduce((sum,k)=>sum+(money(t&&t[k])??0),0);}
-function txCostTotal(t){const q=num(t&&t.qty)??0;return q*((money(t&&t.costAtSale)??0)+(money(t&&t.certCostAtSale)??0));}
+function txGross(t){return (num(t&&t.qty)??0)*(ledgerMoney(t&&t.price)??0);}
+function txFeeTotal(t){return ['platformFee','shippingFee','fixedFee','otherFee'].reduce((sum,k)=>sum+(ledgerMoney(t&&t[k])??0),0);}
+function txCostTotal(t){const q=num(t&&t.qty)??0;return q*((ledgerMoney(t&&t.costAtSale)??0)+(ledgerMoney(t&&t.certCostAtSale)??0));}
 function txProfitImpact(t){if(!t)return 0;const gross=txGross(t),cost=txCostTotal(t),fees=txFeeTotal(t);
-  if(t.type==='sale')return money(gross-cost-fees)??0;
-  if(t.type==='return')return money(-gross+cost-fees)??0;
+  if(t.type==='sale')return ledgerMoney(gross-cost-fees)??0;
+  if(t.type==='return')return ledgerMoney(-gross+cost-fees)??0;
   return 0;}
 function txRevenueImpact(t){if(!t)return 0;return t.type==='sale'?txGross(t):t.type==='return'?-txGross(t):0;}
 function txCostImpact(t){if(!t)return 0;return t.type==='sale'?txCostTotal(t):t.type==='return'?-txCostTotal(t):0;}
@@ -916,7 +918,7 @@ function loadVisiblePhotos(){document.querySelectorAll('img[data-photo]:not([dat
 /* ── transactions ── */
 function recordTx(itemId,type,qty,price,date,note,meta){
   const it=state.items.find(x=>x._id===itemId);if(!it)return false;
-  const q=num(qty),pr=money(price);meta=meta||{};
+  const q=num(qty),pr=ledgerMoney(price);meta=meta||{};
   if(q===null||q<=0||!Number.isInteger(q)){toast('數量必須是大於 0 的整數');return false;}
   if(pr===null||pr<0){toast(type==='buy'?'請填進貨單價':'請填實際成交單價');return false;}
   const current=num(it.qty)??0;
@@ -928,8 +930,8 @@ function recordTx(itemId,type,qty,price,date,note,meta){
     id:uid(),itemId,type,qty:q,price:pr,date:date||new Date().toISOString().slice(0,10),note:(note||'').trim(),
     channel:String(meta.channel||'').trim(),promo:String(meta.promo||'').trim(),ref:String(meta.ref||'').trim(),
     platformFee:meta.platformFee,shippingFee:meta.shippingFee,fixedFee:meta.fixedFee,otherFee:meta.otherFee,
-    costAtSale:type==='return'?(money((latestSaleTx(itemId)||{}).costAtSale)??money(effectiveCost(it))??0):type==='sale'?(money(effectiveCost(it))??0):0,
-    certCostAtSale:type==='return'?(money((latestSaleTx(itemId)||{}).certCostAtSale)??money(certCostOf(it))??0):type==='sale'?(money(certCostOf(it))??0):0
+    costAtSale:type==='return'?(ledgerMoney((latestSaleTx(itemId)||{}).costAtSale)??ledgerMoney(effectiveCost(it))??0):type==='sale'?(ledgerMoney(effectiveCost(it))??0):0,
+    certCostAtSale:type==='return'?(ledgerMoney((latestSaleTx(itemId)||{}).certCostAtSale)??ledgerMoney(certCostOf(it))??0):type==='sale'?(ledgerMoney(certCostOf(it))??0):0
   });
   state.tx.push(t);
   if(type==='sale')it.qty=current-q;
@@ -975,6 +977,7 @@ function fitMatches(item,key){
 /* ───────── render ───────── */
 const $=id=>document.getElementById(id);
 const fmt=n=>'$'+(money(n)??0).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtLedger=n=>'$'+(ledgerMoney(n)??0).toLocaleString('en-US',{maximumFractionDigits:2});
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 function computeStats(){
@@ -1311,9 +1314,9 @@ function delItem(){
 const TX_FEE_IDS={platform:'tx_platform_fee',shipping:'tx_shipping_fee',fixed:'tx_fixed_fee',other:'tx_other_fee'};
 function readTxChannel(){const raw=$('tx_channel').value;return raw==='其他'?$('tx_channel_other').value.trim():raw;}
 function setTxFeeOpen(open){state.txFeeOpen=!!open;$('txFeePanel').style.display=open?'block':'none';$('txFeeToggle').classList.toggle('open',!!open);}
-function setTxFeeValue(key,value,force){if(force||!state.txFeeTouched||!state.txFeeTouched[key])$(TX_FEE_IDS[key]).value=money(value)??0;}
+function setTxFeeValue(key,value,force){if(force||!state.txFeeTouched||!state.txFeeTouched[key])$(TX_FEE_IDS[key]).value=ledgerMoney(value)??0;}
 function autoTxFees(force){
-  const q=num($('tx_qty').value)??0,pr=money($('tx_price').value)??0,total=q*pr,raw=$('tx_channel').value;
+  const q=num($('tx_qty').value)??0,pr=ledgerMoney($('tx_price').value)??0,total=q*pr,raw=$('tx_channel').value;
   if(state.txType==='sale'){
     setTxFeeValue('platform',raw==='蝦皮'?total*p('comm'):0,force);
     setTxFeeValue('shipping',raw==='蝦皮'?p('ship'):0,force);
@@ -1322,8 +1325,8 @@ function autoTxFees(force){
   }else{
     ['platform','shipping','fixed','other'].forEach(k=>setTxFeeValue(k,0,force));
   }
-  const fees=['tx_platform_fee','tx_shipping_fee','tx_fixed_fee','tx_other_fee'].reduce((a,id)=>a+(money($(id).value)??0),0);
-  $('txFeeBrief').textContent=state.txType==='buy'?'進貨不計銷售費用':fees?('合計 '+fmt(fees)):'目前 $0';
+  const fees=['tx_platform_fee','tx_shipping_fee','tx_fixed_fee','tx_other_fee'].reduce((a,id)=>a+(ledgerMoney($(id).value)??0),0);
+  $('txFeeBrief').textContent=state.txType==='buy'?'進貨不計銷售費用':fees?('合計 '+fmtLedger(fees)):'目前 $0';
 }
 function renderTxPriceQuick(it){
   let list=[];
@@ -1332,7 +1335,7 @@ function renderTxPriceQuick(it){
     const last=latestSaleTx(it._id);list=[['最近成交',last?last.price:null],['預設成交',itemSalePrice(it)]];
   }else list=[['預設成交',itemSalePrice(it)],['建議售價',itemSuggest(it)],['蝦皮定價',itemShopee(it)]];
   const seen=new Set();
-  $('txPriceQuick').innerHTML=list.filter(([,v])=>v!=null&&!seen.has(String(v))&&seen.add(String(v))).map(([label,v])=>`<button class="tx-pricechip" type="button" data-price="${money(v)}">${label} ${fmt(v)}</button>`).join('');
+  $('txPriceQuick').innerHTML=list.filter(([,v])=>v!=null&&!seen.has(String(v))&&seen.add(String(v))).map(([label,v])=>`<button class="tx-pricechip" type="button" data-price="${ledgerMoney(v)}">${label} ${fmtLedger(v)}</button>`).join('');
 }
 function openTx(itemId,type,qty){
   const it=state.items.find(x=>x._id===itemId);if(!it)return;
@@ -1362,7 +1365,7 @@ function setTxType(type){
     const last=latestSaleTx(it._id);
     $('txTitle').textContent='新增退貨紀錄';$('txPriceLabel').innerHTML='實際退款單價 <span class="req">＊</span><span class="hint"> 元</span>';
     $('txChannelLabel').innerHTML='原銷售通路 <span class="hint">選填</span>';$('txRefLabel').innerHTML='訂單編號／退貨原因 <span class="hint">選填</span>';
-    $('txSave').textContent='確認退貨並回庫';$('tx_price').value=last?(money(last.price)??''):(itemSalePrice(it)??'');
+    $('txSave').textContent='確認退貨並回庫';$('tx_price').value=last?(ledgerMoney(last.price)??''):(itemSalePrice(it)??'');
     if(last&&last.channel){const opt=[...$('tx_channel').options].find(o=>o.value===last.channel);$('tx_channel').value=opt?last.channel:'其他';$('tx_channel_other').value=opt?'':last.channel;}
   }else{
     $('txTitle').textContent='新增進貨紀錄';$('txPriceLabel').innerHTML='實際進貨單價 <span class="req">＊</span><span class="hint"> 元</span>';
@@ -1373,15 +1376,15 @@ function setTxType(type){
   renderTxPriceQuick(it);autoTxFees(true);updateTxPrev();
 }
 function updateTxPrev(){
-  const q=num($('tx_qty').value)??0,pr=money($('tx_price').value)??0,it=state.items.find(x=>x._id===state.txItemId);if(!it)return;
+  const q=num($('tx_qty').value)??0,pr=ledgerMoney($('tx_price').value)??0,it=state.items.find(x=>x._id===state.txItemId);if(!it)return;
   const cur=num(it.qty)??0;autoTxFees(false);
-  const platform=money($('tx_platform_fee').value)??0,shipping=money($('tx_shipping_fee').value)??0,fixed=money($('tx_fixed_fee').value)??0,other=money($('tx_other_fee').value)??0;
-  const gross=q*pr,cost=q*((money(effectiveCost(it))??0)+(money(certCostOf(it))??0)),fees=platform+shipping+fixed+other;
+  const platform=ledgerMoney($('tx_platform_fee').value)??0,shipping=ledgerMoney($('tx_shipping_fee').value)??0,fixed=ledgerMoney($('tx_fixed_fee').value)??0,other=ledgerMoney($('tx_other_fee').value)??0;
+  const gross=q*pr,cost=q*((ledgerMoney(effectiveCost(it))??0)+(ledgerMoney(certCostOf(it))??0)),fees=platform+shipping+fixed+other;
   if(state.txType==='buy'){
-    $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>本次進貨金額</span><b>${fmt(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong>${cur+q} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>進貨數量</span><b>${q||0} 件</b></div><div class="tx-sumcell"><span>單件成本</span><b>${fmt(pr)}</b></div><div class="tx-sumcell"><span>目前庫存</span><b>${cur} 件</b></div></div>`;
+    $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>本次進貨金額</span><b>${fmtLedger(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong>${cur+q} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>進貨數量</span><b>${q||0} 件</b></div><div class="tx-sumcell"><span>單件成本</span><b>${fmtLedger(pr)}</b></div><div class="tx-sumcell"><span>目前庫存</span><b>${cur} 件</b></div></div>`;
     return;
   }
-  const profit=state.txType==='sale'?money(gross-cost-fees)??0:money(-gross+cost-fees)??0;
+  const profit=state.txType==='sale'?ledgerMoney(gross-cost-fees)??0:ledgerMoney(-gross+cost-fees)??0;
   const after=state.txType==='sale'?cur-q:cur+q,margin=gross>0?Math.round(profit/gross*100):0;
   let alert='';
   if(state.txType==='sale'){
@@ -1390,7 +1393,7 @@ function updateTxPrev(){
     const msg=profit<0?'這筆交易會虧損，請確認售價與費用。':margin<20?'淨利率低於 20%，請確認是否為刻意促銷。':discount?`較建議售價低 ${discount}%；已按實際成交價計算。`:'價格與費用已完整帶入，確認後才會扣庫存。';
     alert=`<div class="tx-alert ${cls}">${msg}</div>`;
   }else alert=`<div class="tx-alert warn">退貨會增加庫存並沖銷營收；退貨產生的額外費用可在「費用明細」填入。</div>`;
-  $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>${state.txType==='sale'?'本筆實收':'本筆退款'}</span><b>${fmt(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong style="color:${after<=0?'var(--out)':'var(--txt)'}">${after} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>商品成本</span><b>${fmt(cost)}</b></div><div class="tx-sumcell"><span>通路／其他費</span><b>${fmt(fees)}</b></div><div class="tx-sumcell"><span>${state.txType==='sale'?'實拿淨利':'淨利影響'}</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b></div></div>${alert}`;
+  $('txPrev').innerHTML=`<div class="tx-sumtop"><div><span>${state.txType==='sale'?'本筆實收':'本筆退款'}</span><b>${fmtLedger(gross)}</b></div><div class="tx-stockafter">完成後庫存<strong style="color:${after<=0?'var(--out)':'var(--txt)'}">${after} 件</strong></div></div><div class="tx-sumgrid"><div class="tx-sumcell"><span>商品成本</span><b>${fmtLedger(cost)}</b></div><div class="tx-sumcell"><span>通路／其他費</span><b>${fmtLedger(fees)}</b></div><div class="tx-sumcell"><span>${state.txType==='sale'?'實拿淨利':'淨利影響'}</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmtLedger(profit)}</b></div></div>${alert}`;
 }
 function saveTx(){
   const raw=$('tx_channel').value,channel=readTxChannel();
@@ -1410,12 +1413,12 @@ function renderHistory(){
   const txs=state.tx.filter(t=>t.itemId===state.hisItemId).sort((a,b)=>String(b.date).localeCompare(a.date)||(String(b.id).localeCompare(String(a.id))));
   let sold=0,bought=0,returned=0,rev=0,profit=0,fees=0;
   txs.forEach(t=>{if(t.type==='sale')sold+=num(t.qty)??0;else if(t.type==='return')returned+=num(t.qty)??0;else if(t.type==='buy')bought+=num(t.qty)??0;rev+=txRevenueImpact(t);profit+=txProfitImpact(t);if(t.type!=='buy')fees+=txFeeTotal(t);});
-  $('hisSummary').innerHTML=`淨售 ${sold-returned} 件 · 淨營收 ${fmt(rev)} · 實拿淨利 <b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b>　｜　進貨 ${bought} 件${fees?' · 費用 '+fmt(fees):''}`;
+  $('hisSummary').innerHTML=`淨售 ${sold-returned} 件 · 淨營收 ${fmtLedger(rev)} · 實拿淨利 <b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmtLedger(profit)}</b>　｜　進貨 ${bought} 件${fees?' · 費用 '+fmtLedger(fees):''}`;
   $('hisList').innerHTML=txs.length?txs.map(t=>{
     const label=t.type==='sale'?'賣出':t.type==='buy'?'進貨':t.type==='return'?'退貨':'調整',gross=txGross(t),impact=txProfitImpact(t);
     const meta=[t.date,t.channel,t.promo,t.ref,t.note].filter(Boolean).map(esc).join(' · ');
-    const main=t.type==='buy'?`進貨 ${t.qty} 件 · ${fmt(gross)}`:`${t.qty} 件 · 單價 ${fmt(t.price)}`;
-    const side=t.type==='sale'?`<b>${fmt(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">淨利 ${fmt(impact)}</span>`:t.type==='return'?`<b style="color:var(--out)">-${fmt(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">影響 ${fmt(impact)}</span>`:`<b>-${fmt(gross)}</b><span style="color:var(--muted)">庫存 +${t.qty}</span>`;
+    const main=t.type==='buy'?`進貨 ${t.qty} 件 · ${fmtLedger(gross)}`:`${t.qty} 件 · 單價 ${fmtLedger(t.price)}`;
+    const side=t.type==='sale'?`<b>${fmtLedger(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">淨利 ${fmtLedger(impact)}</span>`:t.type==='return'?`<b style="color:var(--out)">-${fmtLedger(gross)}</b><span style="color:${impact>=0?'var(--ok)':'var(--out)'}">影響 ${fmtLedger(impact)}</span>`:`<b>-${fmtLedger(gross)}</b><span style="color:var(--muted)">庫存 +${t.qty}</span>`;
     return `<div class="hisrow"><span class="ht ${t.type}">${label}</span><div class="hbody"><div class="hline"><b>${main}</b></div><div class="hd">${meta||'未填附註'}</div></div><div class="hside">${side}</div><button class="hdel" data-tx="${t.id}" aria-label="刪除">✕</button></div>`;
   }).join(''):`<div class="empty" style="padding:30px"><b>還沒有交易</b>按「賣貨」或「進貨」建立第一筆紀錄</div>`;
 }
@@ -1456,26 +1459,26 @@ function renderSalesStats(){
       saleCount++;saleGross+=amt;soldQty+=num(t.qty)??0;const nm=it?it.name:'(已刪除品項)';byItem[nm]=(byItem[nm]||0)+(num(t.qty)??0);
     }else{retQty+=num(t.qty)??0;retAmt+=amt;}
   });
-  const margin=rev>0?Math.round(profit/rev*100):0,avgOrder=saleCount>0?money(saleGross/saleCount):0,avgPrice=soldQty>0?money(saleGross/soldQty):0;
+  const margin=rev>0?Math.round(profit/rev*100):0,avgOrder=saleCount>0?ledgerMoney(saleGross/saleCount):0,avgPrice=soldQty>0?ledgerMoney(saleGross/soldQty):0;
   const top=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const elemArr=Object.entries(byElem).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const channelArr=Object.entries(byChannel).filter(([,v])=>v!==0).sort((a,b)=>b[1]-a[1]);
   const pieParts=elemArr.map(([k,v])=>({label:k,value:v,color:elemColor(k)}));
   const pieTotal=elemArr.reduce((a,[,v])=>a+v,0);
-  const pieLegend=elemArr.map(([k,v])=>`<div class="topsell"><span class="tn"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${elemColor(k)};margin-right:6px"></span>${k}</span><span class="tv">${fmt(v)} · ${pieTotal>0?Math.round(v/pieTotal*100):0}%</span></div>`).join('');
-  const channelRows=channelArr.map(([k,v])=>`<div class="topsell"><span class="tn">${esc(k)}</span><span class="tv" style="color:${v>=0?'var(--goldtxt)':'var(--out)'}">${fmt(v)}</span></div>`).join('');
+  const pieLegend=elemArr.map(([k,v])=>`<div class="topsell"><span class="tn"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${elemColor(k)};margin-right:6px"></span>${k}</span><span class="tv">${fmtLedger(v)} · ${pieTotal>0?Math.round(v/pieTotal*100):0}%</span></div>`).join('');
+  const channelRows=channelArr.map(([k,v])=>`<div class="topsell"><span class="tn">${esc(k)}</span><span class="tv" style="color:${v>=0?'var(--goldtxt)':'var(--out)'}">${fmtLedger(v)}</span></div>`).join('');
   const tr=monthlyTrend(6),hasTrend=tr.some(m=>Math.abs(m.rev)>0||Math.abs(m.profit)>0);
   $('statBody').innerHTML=`
-    <div class="stat-big"><div><span>淨銷售件數</span><b>${qty}</b></div><div><span>淨銷售額</span><b>${fmt(rev)}</b></div></div>
-    <div class="stat-big"><div><span>實拿淨利</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmt(profit)}</b></div><div><span>淨利率</span><b>${margin}%</b></div></div>
+    <div class="stat-big"><div><span>淨銷售件數</span><b>${qty}</b></div><div><span>淨銷售額</span><b>${fmtLedger(rev)}</b></div></div>
+    <div class="stat-big"><div><span>實拿淨利</span><b style="color:${profit>=0?'var(--ok)':'var(--out)'}">${fmtLedger(profit)}</b></div><div><span>淨利率</span><b>${margin}%</b></div></div>
     ${saleCount?`<div class="stat-sec">成本結構</div>
-      <div class="topsell"><span class="tn">淨商品成本</span><span class="tv">${fmt(cogs)}</span></div>
-      <div class="topsell"><span class="tn">平台／運費／其他費用</span><span class="tv">${fmt(fees)}</span></div>
+      <div class="topsell"><span class="tn">淨商品成本</span><span class="tv">${fmtLedger(cogs)}</span></div>
+      <div class="topsell"><span class="tn">平台／運費／其他費用</span><span class="tv">${fmtLedger(fees)}</span></div>
       <div class="stat-sec">經營指標</div>
       <div class="topsell"><span class="tn">銷售交易筆數</span><span class="tv">${saleCount} 筆</span></div>
-      <div class="topsell"><span class="tn">平均每筆成交額</span><span class="tv">${fmt(avgOrder)}</span></div>
-      <div class="topsell"><span class="tn">平均每件成交價</span><span class="tv">${fmt(avgPrice)}</span></div>
-      ${retQty?`<div class="topsell"><span class="tn" style="color:var(--out)">退貨沖銷</span><span class="tv">${retQty} 件 · ${fmt(retAmt)}</span></div>`:''}`:''}
+      <div class="topsell"><span class="tn">平均每筆成交額</span><span class="tv">${fmtLedger(avgOrder)}</span></div>
+      <div class="topsell"><span class="tn">平均每件成交價</span><span class="tv">${fmtLedger(avgPrice)}</span></div>
+      ${retQty?`<div class="topsell"><span class="tn" style="color:var(--out)">退貨沖銷</span><span class="tv">${retQty} 件 · ${fmtLedger(retAmt)}</span></div>`:''}`:''}
     ${channelRows?`<div class="stat-sec">銷售通路</div>${channelRows}`:''}
     ${hasTrend?`<div class="stat-sec">近 6 個月趨勢 <span style="float:right;font-weight:400"><span style="color:#c9a227">■</span> 營收　<span style="color:#5fb87a">■</span> 淨利</span></div><div class="chartbox">${trendChartSVG(tr)}</div>`:''}
     ${pieParts.length?`<div class="stat-sec">各五行銷售佔比</div><div class="chartbox">${pieSVG(pieParts)}</div>${pieLegend}`:''}
@@ -1520,9 +1523,9 @@ function printReport(){
   state.items.forEach(it=>{invCost+=(effectiveCost(it)??0)*(num(it.qty)??0);const st=stockStatus(it.qty,num(it.safe)??p('safe'));if(st&&st.c!=='ok'){need++;lowList.push(esc(it.name)+'（'+(num(it.qty)??0)+'）');}});
   const top=Object.entries(byItem).sort((a,b)=>b[1].r-a[1].r).slice(0,10),channels=Object.entries(byChannel).filter(([,v])=>v!==0).sort((a,b)=>b[1]-a[1]);
   $('printArea').innerHTML=`<h1>靜月之光 · 月報 ${mk}</h1><p class="pmeta">產出時間 ${now.toLocaleString('zh-TW')}</p>
-    <table><tr><td>本月淨銷售件數</td><td>${qty}</td></tr><tr><td>本月淨銷售額</td><td>${fmt(rev)}</td></tr><tr><td>本月實拿淨利</td><td>${fmt(profit)}</td></tr><tr><td>淨利率</td><td>${rev>0?Math.round(profit/rev*100):0}%</td></tr><tr><td>淨商品成本</td><td>${fmt(cogs)}</td></tr><tr><td>平台／運費／其他費用</td><td>${fmt(fees)}</td></tr><tr><td>銷售交易筆數</td><td>${saleCount} 筆</td></tr>${retQty?`<tr><td>退貨沖銷</td><td>${retQty} 件 · ${fmt(retAmt)}</td></tr>`:''}<tr><td>目前庫存成本</td><td>${fmt(invCost)}</td></tr><tr><td>待補貨品項</td><td>${need}</td></tr></table>
-    <h2>銷售通路</h2>${channels.length?'<table>'+channels.map(([n,v])=>`<tr><td>${esc(n)}</td><td>${fmt(v)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
-    <h2>熱賣品項（前 10）</h2>${top.length?'<table>'+top.map(([n,o])=>`<tr><td>${esc(n)}</td><td>${o.q} 件 · ${fmt(o.r)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
+    <table><tr><td>本月淨銷售件數</td><td>${qty}</td></tr><tr><td>本月淨銷售額</td><td>${fmtLedger(rev)}</td></tr><tr><td>本月實拿淨利</td><td>${fmtLedger(profit)}</td></tr><tr><td>淨利率</td><td>${rev>0?Math.round(profit/rev*100):0}%</td></tr><tr><td>淨商品成本</td><td>${fmtLedger(cogs)}</td></tr><tr><td>平台／運費／其他費用</td><td>${fmtLedger(fees)}</td></tr><tr><td>銷售交易筆數</td><td>${saleCount} 筆</td></tr>${retQty?`<tr><td>退貨沖銷</td><td>${retQty} 件 · ${fmtLedger(retAmt)}</td></tr>`:''}<tr><td>目前庫存成本</td><td>${fmtLedger(invCost)}</td></tr><tr><td>待補貨品項</td><td>${need}</td></tr></table>
+    <h2>銷售通路</h2>${channels.length?'<table>'+channels.map(([n,v])=>`<tr><td>${esc(n)}</td><td>${fmtLedger(v)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
+    <h2>熱賣品項（前 10）</h2>${top.length?'<table>'+top.map(([n,o])=>`<tr><td>${esc(n)}</td><td>${o.q} 件 · ${fmtLedger(o.r)}</td></tr>`).join('')+'</table>':'<p>本月尚無銷售</p>'}
     <h2>待補貨清單</h2>${lowList.length?'<p>'+lowList.join('、')+'</p>':'<p>無</p>'}`;
   window.print();
 }
@@ -1762,7 +1765,7 @@ function buildWorkbook(){
   goldHdr(wt.getRow(2),['日期','類型','品項','數量','成交單價','成交總額','通路／來源','成交方式','買家／訂單','平台／金流費','運費補貼','固定成本','其他成本','商品成本','實拿淨利','備註']);
   let tr=3;[...state.tx].sort((a,b)=>String(b.date).localeCompare(a.date)||(String(b.id).localeCompare(String(a.id)))).forEach(tx=>{
     const it=state.items.find(x=>x._id===tx.itemId),row=wt.getRow(tr++),label=tx.type==='sale'?'賣出':tx.type==='buy'?'進貨':tx.type==='return'?'退貨':'調整';
-    row.values=[tx.date,label,it?it.name:'(已刪除品項)',num(tx.qty)??0,money(tx.price)??0,txGross(tx),tx.channel||'',tx.promo||'',tx.ref||'',money(tx.platformFee)??0,money(tx.shippingFee)??0,money(tx.fixedFee)??0,money(tx.otherFee)??0,txCostTotal(tx),tx.type==='buy'?'':txProfitImpact(tx),tx.note||''];
+    row.values=[tx.date,label,it?it.name:'(已刪除品項)',num(tx.qty)??0,ledgerMoney(tx.price)??0,txGross(tx),tx.channel||'',tx.promo||'',tx.ref||'',ledgerMoney(tx.platformFee)??0,ledgerMoney(tx.shippingFee)??0,ledgerMoney(tx.fixedFee)??0,ledgerMoney(tx.otherFee)??0,txCostTotal(tx),tx.type==='buy'?'':txProfitImpact(tx),tx.note||''];
     if(tx.type==='sale')row.getCell(2).font={color:{argb:'FF2E7D46'},bold:true};else if(tx.type==='return')row.getCell(2).font={color:{argb:'FFC0392B'},bold:true};else row.getCell(2).font={color:{argb:'FF2C6FB0'},bold:true};
   });
   wt.autoFilter={from:'A2',to:'P2'};
